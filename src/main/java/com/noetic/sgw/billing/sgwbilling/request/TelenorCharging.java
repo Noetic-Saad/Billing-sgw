@@ -57,11 +57,17 @@ public class TelenorCharging {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String correlationID = new Random().nextInt((999 - 100) + 1) + now.format(formatter);
         String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
+        String subscriberNumber = "";
+        if(req.getHeader("msisdn").startsWith("92")) {
+            subscriberNumber = req.getHeader("msisdn").replaceFirst("92", "0");
+        }else {
+            subscriberNumber = req.getHeader("msisdn");
+        }
         HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
                 .header("authorization", "Bearer "+accessToken)
                 .header("content-type", "application/json")
                 .header("cache-control", "no-cache")
-                .body("{\n\t\"msisdn\":\""+req.getHeader("msisdn")+"\",\n\t\"chargableAmount\":\""+CHARGABLE_AMOUNT_WITH_TAX+"\",\n\t\"PartnerID\":\""+partnerID+"\",\n\t\"ProductID\":\""+productID+"\",\n\t\"TransactionID\":\""+transactionID+"\",\n\t\"correlationID\":\""+correlationID+"\"\n}")
+                .body("{\n\t\"msisdn\":\""+subscriberNumber+"\",\n\t\"chargableAmount\":\""+CHARGABLE_AMOUNT_WITH_TAX+"\",\n\t\"PartnerID\":\""+partnerID+"\",\n\t\"ProductID\":\""+productID+"\",\n\t\"TransactionID\":\""+transactionID+"\",\n\t\"correlationID\":\""+correlationID+"\"\n}")
                 .asJson();
         logger.info("Charging Api Response "+response.getBody().toPrettyString());
         Map map = objectMapper.readValue(response.getBody().toString(), Map.class);

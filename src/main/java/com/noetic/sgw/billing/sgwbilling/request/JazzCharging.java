@@ -3,6 +3,10 @@ package com.noetic.sgw.billing.sgwbilling.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.SuccessBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.repository.FailedRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.repository.SuccessBilledRecordsRepository;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
@@ -10,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.data.jpa.repository.query.InvalidJpaQueryMethodException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.acl.LastOwnerException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -24,8 +30,14 @@ import java.util.TimeZone;
 
 public class JazzCharging {
 
+    Logger logger = LoggerFactory.getLogger(JazzCharging.class);
+
     @Autowired
     private Environment env;
+    @Autowired
+    SuccessBilledRecordsRepository successBilledRecordsRepository;
+    @Autowired
+    FailedRecordsRepository failedRecordsRepository;
     private static final double CHARGABLE_AMOUNT = 5;
     private static final double CHARGABLE_AMOUNT_WITH_TAX = 598;
     private String methodName ="UpdateBalanceAndDate";
@@ -38,9 +50,8 @@ public class JazzCharging {
     private String externalData2="GNcasual_VAS";
     private String originTimeStamp = "";
     private ObjectMapper objectMapper = new ObjectMapper();
-    Logger logger = LoggerFactory.getLogger(JazzCharging.class);
 
-    public void jazzChargeRequest(HttpServletRequest request) throws JsonProcessingException {
+    public String jazzChargeRequest(HttpServletRequest request) throws JsonProcessingException {
 
         Date date = new Date(System.currentTimeMillis());
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
@@ -130,8 +141,53 @@ public class JazzCharging {
                     .header("Connection", "keep-alive")
                     .body(inputXML).asString();
             Map map = objectMapper.readValue(response.getBody().toString(), Map.class);
+            if(response.getStatus()==200){
+                saveSuccessRecords(map,request);
+            }else {
+                saveFailedRecords(map,request);
+            }
         }catch (UnirestException e){
             logger.error("Error while sending request "+e.getCause());
+            return "failed";
         }
+        return "success";
+    }
+    private String saveSuccessRecords(Map map,HttpServletRequest req){
+
+        SuccessBilledRecordsEntity entity = new SuccessBilledRecordsEntity();
+        entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
+        entity.setOperatorId(Integer.parseInt(req.getHeader("operator_id")));
+        entity.setChargingMechanism(3);
+        entity.setShareAmount(Double.parseDouble(req.getHeader("share_amount")));
+        entity.setChargedAmount(CHARGABLE_AMOUNT);
+        entity.setMsisdn(req.getHeader("msisdn"));
+        entity.setChargeTime(Timestamp.valueOf(LocalDateTime.now()));
+        try {
+            successBilledRecordsRepository.save(entity);
+            logger.info("Records For Success Billing Inserted Successfull");
+        }catch (InvalidJpaQueryMethodException e){
+            logger.error("Jpa Exception Caught Here: "+e.getCause());
+
+        }
+        return "";
+    }
+    private String saveFailedRecords(Map map,HttpServletRequest req){
+
+        FailedBilledRecordsEntity entity = new FailedBilledRecordsEntity();
+        entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
+        entity.setOperatorId(Integer.parseInt(req.getHeader("operator_id")));
+        entity.setChargingMechanism(3);
+        entity.setShareAmount(Double.parseDouble(req.getHeader("share_amount")));
+        entity.setChargeAmount(CHARGABLE_AMOUNT);
+        entity.setMsisdn(req.getHeader("msisdn"));
+        entity.setDateTime(Timestamp.valueOf(LocalDateTime.now()));
+        try {
+            failedRecordsRepository.save(entity);
+            logger.info("Records for failed Billing Inserted Successfull");
+        }catch (InvalidJpaQueryMethodException e){
+            logger.error("Jpa Exception Caught Here: "+e.getCause());
+
+        }
+        return "";
     }
 }

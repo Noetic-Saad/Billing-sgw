@@ -2,6 +2,7 @@ package com.noetic.sgw.billing.sgwbilling.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.noetic.sgw.billing.sgwbilling.controller.BillingController;
+import com.noetic.sgw.billing.sgwbilling.request.JazzCharging;
 import com.noetic.sgw.billing.sgwbilling.request.TelenorCharging;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
@@ -18,7 +19,8 @@ class ChargingService {
 
     Logger logger = LoggerFactory.getLogger(TelenorCharging.class);
     private TelenorCharging telenorCharging;
-    private int operator_id = 1;
+    private JazzCharging jazzCharging;
+    private int operator_id;
     String response = null;
 
     @Autowired
@@ -26,11 +28,12 @@ class ChargingService {
         this.telenorCharging = telenorCharging;
     }
     public String processRequest(HttpServletRequest req) {
+        operator_id = Integer.parseInt(req.getHeader("operator_id"));
         try {
             if (operator_id == 1) {
                 response = telenorCharging.chargeRequest(req);
             } else if (operator_id == 2) {
-
+                response = jazzCharging.jazzChargeRequest(req);
             } else if (operator_id == 3) {
 
             } else if (operator_id == 4) {
