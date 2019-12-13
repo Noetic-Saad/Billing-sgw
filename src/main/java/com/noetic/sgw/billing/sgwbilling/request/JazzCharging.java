@@ -144,6 +144,7 @@ public class JazzCharging {
             if(response.getStatus()==200){
                 saveSuccessRecords(map,request);
             }else {
+                logger.error("Tyring to insert In Failed Record Table");
                 saveFailedRecords(map,request);
             }
         }catch (UnirestException e){
