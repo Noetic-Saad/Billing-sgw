@@ -40,16 +40,17 @@ public class JazzCharging {
     FailedRecordsRepository failedRecordsRepository;
     private static final double CHARGABLE_AMOUNT = 5;
     private static final double CHARGABLE_AMOUNT_WITH_TAX = 598;
-    private String methodName ="UpdateBalanceAndDate";
-    private String transactionCurrency="PKR";
-    private String originNodeType="EXT";
-    private String originHostName="GNcasual";
-    private	String transactionType="GNcasual";
-    private String transactionCode="GNcasual";
-    private String externalData1="GNcasual_VAS";
-    private String externalData2="GNcasual_VAS";
+    private String methodName = "UpdateBalanceAndDate";
+    private String transactionCurrency = "PKR";
+    private String originNodeType = "EXT";
+    private String originHostName = "GNcasual";
+    private String transactionType = "GNcasual";
+    private String transactionCode = "GNcasual";
+    private String externalData1 = "GNcasual_VAS";
+    private String externalData2 = "GNcasual_VAS";
     private String originTimeStamp = "";
     private ObjectMapper objectMapper = new ObjectMapper();
+    HttpResponse<String> response;
 
     public String jazzChargeRequest(HttpServletRequest request) throws JsonProcessingException {
 
@@ -63,13 +64,13 @@ public class JazzCharging {
         String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
 
         String subscriberNumber = "";
-        if(request.getHeader("msisdn").startsWith("92")) {
+        if (request.getHeader("msisdn").startsWith("92")) {
             subscriberNumber = request.getHeader("msisdn").toString().substring(2);
-        }else if(request.getHeader("msisdn").startsWith("0")){
+        } else if (request.getHeader("msisdn").startsWith("0")) {
             subscriberNumber = request.getHeader("msisdn").substring(1);
-        }else if(request.getHeader("msisdn").startsWith("920")){
+        } else if (request.getHeader("msisdn").startsWith("920")) {
             subscriberNumber = request.getHeader("msisdn").substring(3);
-        }else {
+        } else {
             subscriberNumber = request.getHeader("msisdn");
         }
 
@@ -131,7 +132,7 @@ public class JazzCharging {
                 "</params>\n" +
                 "</methodCall>";
         try {
-            HttpResponse<String> response = Unirest.post(env.getProperty("jazz.api.url"))
+            response = Unirest.post(env.getProperty("jazz.api.url"))
                     .header("Authorization", env.getProperty("jazz.api.authorization"))
                     .header("Content-Type", "text/xml")
                     .header("User-Agent", "UGw Server/4.3/1.0")
@@ -140,20 +141,21 @@ public class JazzCharging {
                     .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
                     .header("Connection", "keep-alive")
                     .body(inputXML).asString();
-            Map map = objectMapper.readValue(response.getBody().toString(), Map.class);
-            if(response.getStatus()==200){
-                saveSuccessRecords(map,request);
-            }else {
-                logger.error("Tyring to insert In Failed Record Table");
-                saveFailedRecords(map,request);
-            }
-        }catch (UnirestException e){
-            logger.error("Error while sending request "+e.getCause());
-            return "failed";
+        } catch (UnirestException e) {
+            logger.error("Error while sending request " + e.getStackTrace());
         }
+        Map map = objectMapper.readValue(response.getBody().toString(), Map.class);
+        if (response.getStatus() == 200) {
+            saveSuccessRecords(map, request);
+        } else {
+            logger.error("Tyring to insert In Failed Record Table");
+            saveFailedRecords(map, request);
+        }
+
         return "success";
     }
-    private String saveSuccessRecords(Map map,HttpServletRequest req){
+
+    private String saveSuccessRecords(Map map, HttpServletRequest req) {
 
         SuccessBilledRecordsEntity entity = new SuccessBilledRecordsEntity();
         entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
@@ -166,13 +168,14 @@ public class JazzCharging {
         try {
             successBilledRecordsRepository.save(entity);
             logger.info("Records For Success Billing Inserted Successfull");
-        }catch (InvalidJpaQueryMethodException e){
-            logger.error("Jpa Exception Caught Here: "+e.getCause());
+        } catch (InvalidJpaQueryMethodException e) {
+            logger.error("Jpa Exception Caught Here: " + e.getCause());
 
         }
         return "";
     }
-    private String saveFailedRecords(Map map,HttpServletRequest req){
+
+    private String saveFailedRecords(Map map, HttpServletRequest req) {
 
         FailedBilledRecordsEntity entity = new FailedBilledRecordsEntity();
         entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
@@ -185,8 +188,8 @@ public class JazzCharging {
         try {
             failedRecordsRepository.save(entity);
             logger.info("Records for failed Billing Inserted Successfull");
-        }catch (InvalidJpaQueryMethodException e){
-            logger.error("Jpa Exception Caught Here: "+e.getCause());
+        } catch (InvalidJpaQueryMethodException e) {
+            logger.error("Jpa Exception Caught Here: " + e.getCause());
 
         }
         return "";
