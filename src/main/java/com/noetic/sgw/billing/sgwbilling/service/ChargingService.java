@@ -19,13 +19,13 @@ class ChargingService {
     Logger logger = LoggerFactory.getLogger(TelenorCharging.class);
     private TelenorCharging telenorCharging;
     private int operator_id = 1;
-    HttpResponse<JsonNode> response = null;
+    String response = null;
 
     @Autowired
     public ChargingService(TelenorCharging telenorCharging) {
         this.telenorCharging = telenorCharging;
     }
-    public HttpResponse<JsonNode> processRequest(HttpServletRequest req) {
+    public String processRequest(HttpServletRequest req) {
         try {
             if (operator_id == 1) {
                 response = telenorCharging.chargeRequest(req);

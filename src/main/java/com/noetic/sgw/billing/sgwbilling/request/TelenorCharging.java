@@ -50,9 +50,9 @@ public class TelenorCharging {
     private static final double CHARGABLE_AMOUNT_WITH_TAX = 3.58d;
     private String partnerID = "TP-Noetic";
     private String productID = "Noetic-Weekly-Sub-charge";
-    private HttpResponse<JsonNode> response = null;
+    private String res = null;
 
-    public HttpResponse<JsonNode> chargeRequest(HttpServletRequest req) throws JsonProcessingException {
+    public String chargeRequest(HttpServletRequest req) throws JsonProcessingException {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String correlationID = new Random().nextInt((999 - 100) + 1) + now.format(formatter);
@@ -67,10 +67,12 @@ public class TelenorCharging {
         Map map = objectMapper.readValue(response.getBody().toString(), Map.class);
         if(response.getStatus()==200){
             saveSuccessRecords(map,req);
+            res = map.get("message").toString();
         }else {
             saveFailedRecords(map,req);
+            res = map.get("message").toString();
         }
-        return response;
+        return res;
     }
 
     public String getNewAccessToken() {

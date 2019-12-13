@@ -24,7 +24,7 @@ class BillingController {
     private ChargingService chargingService;
 
     @PostMapping
-    public HttpResponse<JsonNode> chargeRequest(HttpServletRequest req) throws JsonProcessingException {
+    public String chargeRequest(HttpServletRequest req) throws JsonProcessingException {
         return chargingService.processRequest(req);
     }
 }
