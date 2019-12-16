@@ -73,10 +73,10 @@ public class TelenorCharging {
         Map map = objectMapper.readValue(response.getBody().toString(), Map.class);
         if(response.getStatus()==200){
             saveSuccessRecords(map,req);
-            res = map.get("message").toString();
+            res = map.get("Message").toString();
         }else {
             saveFailedRecords(map,req);
-            res = map.get("message").toString();
+            res = map.get("Message").toString();
         }
         return res;
     }
