@@ -11,10 +11,11 @@ public class FailedBilledRecordsEntity {
     private Double chargeAmount;
     private Integer chargingMechanism;
     private Timestamp dateTime;
-    private int operatorId;
+    private String msisdn;
+    private String operatorId;
     private Double shareAmount;
     private Integer vpAccountId;
-    private String msisdn;
+    private String reason;
 
     @Id
     @Column(name = "id")
@@ -58,12 +59,22 @@ public class FailedBilledRecordsEntity {
     }
 
     @Basic
+    @Column(name = "msisdn")
+    public String getMsisdn() {
+        return msisdn;
+    }
+
+    public void setMsisdn(String msisdn) {
+        this.msisdn = msisdn;
+    }
+
+    @Basic
     @Column(name = "operator_id")
-    public int getOperatorId() {
+    public String getOperatorId() {
         return operatorId;
     }
 
-    public void setOperatorId(int operatorId) {
+    public void setOperatorId(String operatorId) {
         this.operatorId = operatorId;
     }
 
@@ -88,13 +99,13 @@ public class FailedBilledRecordsEntity {
     }
 
     @Basic
-    @Column(name = "msisdn")
-    public String getMsisdn() {
-        return msisdn;
+    @Column(name = "reason")
+    public String getReason() {
+        return reason;
     }
 
-    public void setMsisdn(String msisdn) {
-        this.msisdn = msisdn;
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     @Override
@@ -106,14 +117,15 @@ public class FailedBilledRecordsEntity {
                 Objects.equals(chargeAmount, that.chargeAmount) &&
                 Objects.equals(chargingMechanism, that.chargingMechanism) &&
                 Objects.equals(dateTime, that.dateTime) &&
+                Objects.equals(msisdn, that.msisdn) &&
                 Objects.equals(operatorId, that.operatorId) &&
                 Objects.equals(shareAmount, that.shareAmount) &&
                 Objects.equals(vpAccountId, that.vpAccountId) &&
-                Objects.equals(msisdn, that.msisdn);
+                Objects.equals(reason, that.reason);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, chargeAmount, chargingMechanism, dateTime, operatorId, shareAmount, vpAccountId, msisdn);
+        return Objects.hash(id, chargeAmount, chargingMechanism, dateTime, msisdn, operatorId, shareAmount, vpAccountId, reason);
     }
 }

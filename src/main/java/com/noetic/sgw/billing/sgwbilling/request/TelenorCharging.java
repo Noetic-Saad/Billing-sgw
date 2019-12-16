@@ -76,7 +76,7 @@ public class TelenorCharging {
             res = map.get("Message").toString();
         }else {
             saveFailedRecords(map,req);
-            res = map.get("Message").toString();
+            res = map.get("fault").toString();
         }
         return res;
     }
@@ -130,12 +130,13 @@ public class TelenorCharging {
 
         FailedBilledRecordsEntity entity = new FailedBilledRecordsEntity();
         entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
-        entity.setOperatorId(Integer.parseInt(req.getHeader("operator_id")));
+        entity.setOperatorId(req.getHeader("operator_id"));
         entity.setChargingMechanism(3);
         entity.setShareAmount(Double.parseDouble(req.getHeader("share_amount")));
         entity.setChargeAmount(CHARGABLE_AMOUNT);
         entity.setMsisdn(req.getHeader("msisdn"));
         entity.setDateTime(Timestamp.valueOf(LocalDateTime.now()));
+        entity.setReason(map.get("fault").toString());
         try {
             failedRecordsRepository.save(entity);
             logger.info("Records for failed Billing Inserted Successfull");

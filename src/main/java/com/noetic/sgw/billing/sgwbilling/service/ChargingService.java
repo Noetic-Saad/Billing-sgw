@@ -19,6 +19,7 @@ class ChargingService {
 
     Logger logger = LoggerFactory.getLogger(TelenorCharging.class);
     private TelenorCharging telenorCharging;
+    @Autowired
     private JazzCharging jazzCharging;
     private int operator_id;
     String response = null;
