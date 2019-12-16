@@ -141,7 +141,9 @@ public class JazzCharging {
                     .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
                     .header("Connection", "keep-alive")
                     .body(inputXML).asString();
+            logger.info("Response "+response);
         } catch (UnirestException e) {
+            logger.info("Response +"+ response);
             logger.error("Error while sending request " + e.getStackTrace());
         }
         Map map = objectMapper.readValue(response.getBody().toString(), Map.class);

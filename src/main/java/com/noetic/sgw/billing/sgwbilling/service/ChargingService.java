@@ -27,9 +27,8 @@ class ChargingService {
     public ChargingService(TelenorCharging telenorCharging) {
         this.telenorCharging = telenorCharging;
     }
-    public String processRequest(HttpServletRequest req) {
+    public String processRequest(HttpServletRequest req) throws JsonProcessingException {
         operator_id = Integer.parseInt(req.getHeader("operator_id"));
-        try {
             if (operator_id == 1) {
                 response = telenorCharging.chargeRequest(req);
             } else if (operator_id == 2) {
@@ -41,9 +40,7 @@ class ChargingService {
             } else {
 
             }
-        } catch (Exception e) {
-            logger.error("Exception Caught while Sending Request: " + e.getCause());
-        }
+        System.out.println("Changing Exception"+response);
         return response;
     }
 }
