@@ -2,18 +2,13 @@ package com.noetic.sgw.billing.sgwbilling.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.noetic.sgw.billing.sgwbilling.service.ChargingService;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
+import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
+import com.noetic.sgw.billing.sgwbilling.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/charge")
@@ -24,7 +19,7 @@ class BillingController {
     private ChargingService chargingService;
 
     @PostMapping
-    public String chargeRequest(HttpServletRequest req) throws JsonProcessingException {
+    public Response chargeRequest(@RequestBody ChargeRequestProperties req) throws JsonProcessingException {
         return chargingService.processRequest(req);
     }
 }

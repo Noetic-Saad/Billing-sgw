@@ -11,14 +11,16 @@ public class SuccessBilledRecordsEntity {
     private Timestamp chargeTime;
     private Double chargedAmount;
     private Integer chargingMechanism;
+    private Long msisdn;
     private Integer operatorId;
     private Double shareAmount;
     private Integer vpAccountId;
-    private String msisdn;
+    private String correlationid;
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "auto_gen",sequenceName = "auto_gen")
+    @GeneratedValue(generator = "auto_gen")
     public int getId() {
         return id;
     }
@@ -58,6 +60,16 @@ public class SuccessBilledRecordsEntity {
     }
 
     @Basic
+    @Column(name = "msisdn")
+    public Long getMsisdn() {
+        return msisdn;
+    }
+
+    public void setMsisdn(Long msisdn) {
+        this.msisdn = msisdn;
+    }
+
+    @Basic
     @Column(name = "operator_id")
     public Integer getOperatorId() {
         return operatorId;
@@ -87,16 +99,6 @@ public class SuccessBilledRecordsEntity {
         this.vpAccountId = vpAccountId;
     }
 
-    @Basic
-    @Column(name = "msisdn")
-    public String getMsisdn() {
-        return msisdn;
-    }
-
-    public void setMsisdn(String msisdn) {
-        this.msisdn = msisdn;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -106,14 +108,24 @@ public class SuccessBilledRecordsEntity {
                 Objects.equals(chargeTime, entity.chargeTime) &&
                 Objects.equals(chargedAmount, entity.chargedAmount) &&
                 Objects.equals(chargingMechanism, entity.chargingMechanism) &&
+                Objects.equals(msisdn, entity.msisdn) &&
                 Objects.equals(operatorId, entity.operatorId) &&
                 Objects.equals(shareAmount, entity.shareAmount) &&
-                Objects.equals(vpAccountId, entity.vpAccountId) &&
-                Objects.equals(msisdn, entity.msisdn);
+                Objects.equals(vpAccountId, entity.vpAccountId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, chargeTime, chargedAmount, chargingMechanism, operatorId, shareAmount, vpAccountId, msisdn);
+        return Objects.hash(id, chargeTime, chargedAmount, chargingMechanism, msisdn, operatorId, shareAmount, vpAccountId);
+    }
+
+    @Basic
+    @Column(name = "correlationid")
+    public String getCorrelationid() {
+        return correlationid;
+    }
+
+    public void setCorrelationid(String correlationid) {
+        this.correlationid = correlationid;
     }
 }

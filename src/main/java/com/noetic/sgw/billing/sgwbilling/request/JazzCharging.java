@@ -1,12 +1,13 @@
 package com.noetic.sgw.billing.sgwbilling.request;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.SuccessBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.FailedRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.SuccessBilledRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
+import com.noetic.sgw.billing.sgwbilling.util.Response;
+import com.noetic.sgw.billing.sgwbilling.util.ResponseTypeConstants;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
@@ -25,7 +26,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
@@ -33,9 +33,9 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -49,8 +49,6 @@ public class JazzCharging {
     SuccessBilledRecordsRepository successBilledRecordsRepository;
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
-    private static final double CHARGABLE_AMOUNT = 5;
-    private static final double CHARGABLE_AMOUNT_WITH_TAX = 598;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
     private String originNodeType = "EXT";
@@ -66,8 +64,8 @@ public class JazzCharging {
     private String[] recArray = new String[2];
     HttpResponse<String> response;
 
-    public String jazzChargeRequest(HttpServletRequest request) throws JsonProcessingException {
-
+    public Response jazzChargeRequest(ChargeRequestProperties request) {
+        Response res = new Response();
         Date date = new Date(System.currentTimeMillis());
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
         TimeZone PKT = TimeZone.getTimeZone("Asia/Karachi");
@@ -76,18 +74,20 @@ public class JazzCharging {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
-
+        int chargeAmount = 0;
         String subscriberNumber = "";
-        if (request.getHeader("msisdn").startsWith("92")) {
-            subscriberNumber = request.getHeader("msisdn").toString().substring(2);
-        } else if (request.getHeader("msisdn").startsWith("0")) {
-            subscriberNumber = request.getHeader("msisdn").substring(1);
-        } else if (request.getHeader("msisdn").startsWith("920")) {
-            subscriberNumber = request.getHeader("msisdn").substring(3);
+        boolean isAlreadyCharged = false;
+        if (Long.toString(request.getMsisdn()).startsWith("92")) {
+            subscriberNumber = Long.toString(request.getMsisdn()).substring(2);
+        } else if (Long.toString(request.getMsisdn()).startsWith("0")) {
+            subscriberNumber = Long.toString(request.getMsisdn()).substring(1);
+        } else if (Long.toString(request.getMsisdn()).startsWith("920")) {
+            subscriberNumber = Long.toString(request.getMsisdn()).substring(3);
         } else {
-            subscriberNumber = request.getHeader("msisdn");
+            subscriberNumber = Long.toString(request.getMsisdn());
         }
-
+        chargeAmount = (int)(request.getChargingAmount()+request.getTaxAmount());
+        System.out.println("Amount->"+request.getChargingAmount()+request.getTaxAmount());
         String inputXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
                 "<methodCall>\n" +
                 "<methodName>" + this.methodName + "</methodName>\n" +
@@ -133,80 +133,103 @@ public class JazzCharging {
                 "</member>\n" +
                 "<member>\n" +
                 "<name>subscriberNumber</name>\n" +
-                //"<value><string>3015166666</string></value>\n" +
                 "<value><string>" + subscriberNumber + "</string></value>\n" +
                 "</member>\n" +
                 "<member>\n" +
                 "<name>adjustmentAmountRelative</name>\n" +
-                "<value><string>-" + CHARGABLE_AMOUNT_WITH_TAX + "</string></value>\n" +
+                "<value><string>-" + chargeAmount + "</string></value>\n" +
                 "</member>\n" +
                 "</struct>\n" +
                 "</value>\n" +
                 "</param>\n" +
                 "</params>\n" +
                 "</methodCall>";
-        try {
-            response = Unirest.post(env.getProperty("jazz.api"))
-                    .header("Authorization", env.getProperty("jazz.api.authorization"))
-                    .header("Content-Type", "text/xml")
-                    .header("User-Agent", "UGw Server/4.3/1.0")
-                    .header("Cache-Control", "no-cache")
-                    .header("Pragma", "no-cache")
-                    .header("Host", "10.13.32.156:10010")
-                    .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-                    .header("Connection", "keep-alive")
-                    .body(inputXML).asString();
-            recArray = xmlConversion(response.toString());
-
+        System.out.println(inputXML);
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(request.getOriginDateTime().toInstant(), ZoneId.systemDefault());
+        Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
+        SuccessBilledRecordsEntity successEntity = successBilledRecordsRepository.isAlreadyCharged(request.getMsisdn(),request.getOriginDateTime(),toDate);
+        if(successEntity !=null){
+            isAlreadyCharged =true;
+        }
+        if(!isAlreadyCharged) {
+            try {
+                response = Unirest.post(env.getProperty("jazz.api"))
+                        .header("Authorization", env.getProperty("jazz.api.authorization"))
+                        .header("Content-Type", "text/xml")
+                        .header("User-Agent", "UGw Server/4.3/1.0")
+                        .header("Cache-Control", "no-cache")
+                        .header("Pragma", "no-cache")
+                        .header("Host", "10.13.32.156:10010")
+                        .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
+                        .header("Connection", "keep-alive")
+                        .body(inputXML).asString();
+                System.out.println("Raw Response-->" + response);
+                System.out.println("String Response-->" + response.getBody());
+                recArray = xmlConversion(response.getBody());
+                System.out.println(response.getStatus());
+            } catch (UnirestException e) {
+                logger.info("Response +" + response);
+                logger.error("Error while sending request " + e.getStackTrace());
+            }
             String transID = recArray[0]; // TransactionID
-            System.out.println("Transaction Id-->"+transID);
+            System.out.println("Transaction Id-->" + transID);
             if (recArray[1] != null) {
                 responseCode = Integer.valueOf(recArray[1]);
                 // ResponseCode
             }
-            if(responseCode == HttpStatus.FORBIDDEN.value()) {
+            if (responseCode == HttpStatus.FORBIDDEN.value()) {
+                res.setCorrelationId(request.getCorrelationId());
+                res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
+                res.setMsg("UnAuthorized Request");
                 logger.info(String.format("RESPONSE CODE FORBIDDEN-%s", subscriberNumber));
                 return null;
             }
 
-            if(responseCode==0){
-                status = "Success";
-                msg = "Succesfull";
-            }else if(responseCode==102){
-                msg = "Subscriber not found";
-            }else if(responseCode==124){
-                msg =  "Below minimum balance";
-            }else{
-                msg = "Other Error";
+            if (responseCode == 0) {
+                res.setCorrelationId(request.getCorrelationId());
+                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                res.setMsg("Subscribed SuccessFully");
+            } else if (responseCode == 102) {
+                res.setCorrelationId(request.getCorrelationId());
+                res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
+                res.setMsg("Subscriber not found");
+            } else if (responseCode == 124) {
+                res.setCorrelationId(request.getCorrelationId());
+                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                res.setMsg("Insufficient Balance");
+            } else {
+                res.setCorrelationId(request.getCorrelationId());
+                res.setCode(ResponseTypeConstants.OTHER_ERROR);
+                res.setMsg("Other Error");
             }
-            if(status != null)
-                logger.info("RESPONSE MESSAGE: " + status);
-        } catch (UnirestException e) {
-            logger.info("Response +"+ response);
-            logger.error("Error while sending request " + e.getStackTrace());
-        }
-        if (responseCode == 200) {
-            saveSuccessRecords(msg, request);
-            return "success";
-        } else {
-            logger.info("Tyring to insert In Failed Record Table");
-            saveFailedRecords(msg, request);
-            return "fail";
+            if (status != null)
+                logger.info("RESPONSE MESSAGE: " + res.getMsg());
+
+            if (responseCode == 0) {
+                saveSuccessRecords(res, request);
+            } else {
+                logger.info("Tyring to insert In Failed Record Table");
+                saveFailedRecords(res, request);
+            }
+        }else {
+            res.setCorrelationId(request.getCorrelationId());
+            res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
+            res.setMsg("Already Charged");
         }
 
-
+        return res;
     }
 
-    private String saveSuccessRecords(String msg, HttpServletRequest req) {
-
+    private void saveSuccessRecords(Response res, ChargeRequestProperties req) {
+        System.out.println("Control Came Here");
         SuccessBilledRecordsEntity entity = new SuccessBilledRecordsEntity();
-        entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
-        entity.setOperatorId(Integer.parseInt(req.getHeader("operator_id")));
+        entity.setVpAccountId(req.getVendorPlanId());
+        entity.setOperatorId(req.getOperatorId());
         entity.setChargingMechanism(3);
-        entity.setShareAmount(Double.parseDouble(req.getHeader("share_amount")));
-        entity.setChargedAmount(CHARGABLE_AMOUNT);
-        entity.setMsisdn(req.getHeader("msisdn"));
-        entity.setChargeTime(Timestamp.valueOf(LocalDateTime.now()));
+        entity.setShareAmount(req.getShareAmount());
+        entity.setChargedAmount(req.getChargingAmount());
+        entity.setMsisdn(req.getMsisdn());
+        entity.setChargeTime(new Timestamp(req.getOriginDateTime().getTime()));
         try {
             successBilledRecordsRepository.save(entity);
             logger.info("Records For Success Billing Inserted Successfull");
@@ -214,20 +237,20 @@ public class JazzCharging {
             logger.error("Jpa Exception Caught Here: " + e.getCause());
 
         }
-        return "";
     }
 
-    private String saveFailedRecords(String msg, HttpServletRequest req) {
-
+    private void saveFailedRecords(Response res, ChargeRequestProperties req) {
+        System.out.println("Control Came Here");
         FailedBilledRecordsEntity entity = new FailedBilledRecordsEntity();
-        entity.setVpAccountId(Integer.parseInt(req.getHeader("vp_account_id")));
-        entity.setOperatorId(req.getHeader("operator_id"));
+        entity.setVpAccountId(req.getVendorPlanId());
+        entity.setOperatorId(req.getOperatorId());
         entity.setChargingMechanism(3);
-        entity.setShareAmount(Double.parseDouble(req.getHeader("share_amount")));
-        entity.setChargeAmount(CHARGABLE_AMOUNT);
-        entity.setMsisdn(req.getHeader("msisdn"));
-        entity.setDateTime(Timestamp.valueOf(LocalDateTime.now()));
-        entity.setReason(msg);
+        entity.setShareAmount(req.getShareAmount());
+        entity.setChargeAmount(req.getChargingAmount());
+        entity.setMsisdn(req.getMsisdn());
+        entity.setDateTime(new Timestamp(req.getOriginDateTime().getTime()));
+        entity.setReason(res.getMsg());
+        entity.setStatusCode(res.getCode());
         try {
             failedRecordsRepository.save(entity);
             logger.info("Records for failed Billing Inserted Successfull");
@@ -235,7 +258,6 @@ public class JazzCharging {
             logger.error("Jpa Exception Caught Here: " + e.getCause());
 
         }
-        return "";
     }
     protected
     String[] xmlConversion(String xml) {
@@ -317,6 +339,5 @@ public class JazzCharging {
             t.printStackTrace();
         }
         return retArray;
-
     }
 }

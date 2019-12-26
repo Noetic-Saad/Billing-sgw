@@ -11,15 +11,18 @@ public class FailedBilledRecordsEntity {
     private Double chargeAmount;
     private Integer chargingMechanism;
     private Timestamp dateTime;
-    private String msisdn;
-    private String operatorId;
+    private Long msisdn;
+    private Integer operatorId;
     private Double shareAmount;
     private Integer vpAccountId;
     private String reason;
+    private Integer statusCode;
+    private String correlationid;
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(name = "auto_gen",sequenceName = "auto_gen")
+    @GeneratedValue(generator = "auto_gen")
     public int getId() {
         return id;
     }
@@ -60,21 +63,21 @@ public class FailedBilledRecordsEntity {
 
     @Basic
     @Column(name = "msisdn")
-    public String getMsisdn() {
+    public Long getMsisdn() {
         return msisdn;
     }
 
-    public void setMsisdn(String msisdn) {
+    public void setMsisdn(Long msisdn) {
         this.msisdn = msisdn;
     }
 
     @Basic
     @Column(name = "operator_id")
-    public String getOperatorId() {
+    public Integer getOperatorId() {
         return operatorId;
     }
 
-    public void setOperatorId(String operatorId) {
+    public void setOperatorId(Integer operatorId) {
         this.operatorId = operatorId;
     }
 
@@ -108,6 +111,16 @@ public class FailedBilledRecordsEntity {
         this.reason = reason;
     }
 
+    @Basic
+    @Column(name = "status_code")
+    public Integer getStatusCode() {
+        return statusCode;
+    }
+
+    public void setStatusCode(Integer statusCode) {
+        this.statusCode = statusCode;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -121,11 +134,22 @@ public class FailedBilledRecordsEntity {
                 Objects.equals(operatorId, that.operatorId) &&
                 Objects.equals(shareAmount, that.shareAmount) &&
                 Objects.equals(vpAccountId, that.vpAccountId) &&
-                Objects.equals(reason, that.reason);
+                Objects.equals(reason, that.reason) &&
+                Objects.equals(statusCode, that.statusCode);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, chargeAmount, chargingMechanism, dateTime, msisdn, operatorId, shareAmount, vpAccountId, reason);
+        return Objects.hash(id, chargeAmount, chargingMechanism, dateTime, msisdn, operatorId, shareAmount, vpAccountId, reason, statusCode);
+    }
+
+    @Basic
+    @Column(name = "correlationid")
+    public String getCorrelationid() {
+        return correlationid;
+    }
+
+    public void setCorrelationid(String correlationid) {
+        this.correlationid = correlationid;
     }
 }
