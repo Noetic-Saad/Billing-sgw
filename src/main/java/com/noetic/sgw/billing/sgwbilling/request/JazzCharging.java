@@ -49,6 +49,7 @@ public class JazzCharging {
     SuccessBilledRecordsRepository successBilledRecordsRepository;
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
+    private boolean isTestingFlagOff = false;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
     private String originNodeType = "EXT";
@@ -60,161 +61,165 @@ public class JazzCharging {
     private String originTimeStamp = "";
     private int responseCode = -1;
     private String status="Fail";
-    private String msg = "";
     private String[] recArray = new String[2];
     HttpResponse<String> response;
 
     public Response jazzChargeRequest(ChargeRequestProperties request) {
         Response res = new Response();
-        Date date = new Date(System.currentTimeMillis());
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
-        TimeZone PKT = TimeZone.getTimeZone("Asia/Karachi");
-        dateFormat.setTimeZone(PKT);
-        this.originTimeStamp = dateFormat.format(date);
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
-        int chargeAmount = 0;
-        String subscriberNumber = "";
-        boolean isAlreadyCharged = false;
-        if (Long.toString(request.getMsisdn()).startsWith("92")) {
-            subscriberNumber = Long.toString(request.getMsisdn()).substring(2);
-        } else if (Long.toString(request.getMsisdn()).startsWith("0")) {
-            subscriberNumber = Long.toString(request.getMsisdn()).substring(1);
-        } else if (Long.toString(request.getMsisdn()).startsWith("920")) {
-            subscriberNumber = Long.toString(request.getMsisdn()).substring(3);
-        } else {
-            subscriberNumber = Long.toString(request.getMsisdn());
-        }
-        chargeAmount = (int)(request.getChargingAmount()+request.getTaxAmount());
-        System.out.println("Amount->"+request.getChargingAmount()+request.getTaxAmount());
-        String inputXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
-                "<methodCall>\n" +
-                "<methodName>" + this.methodName + "</methodName>\n" +
-                "<params>\n" +
-                "<param>\n" +
-                "<value>\n" +
-                "<struct>\n" +
-                "<member>\n" +
-                "<name>originNodeType</name>\n" +
-                "<value><string>" + this.originNodeType + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>originHostName</name>\n" +
-                "<value><string>" + this.originHostName + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>originTransactionID</name>\n" +
-                "<value><string>" + transactionID + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>transactionType</name>\n" +
-                "<value><string>" + this.transactionType + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>transactionCode</name>\n" +
-                "<value><string>" + this.transactionCode + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>externalData1</name>\n" +
-                "<value><string>" + this.externalData1 + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>externalData2</name>\n" +
-                "<value><string>" + this.externalData2 + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>originTimeStamp</name>\n" +
-                "<value><dateTime.iso8601>" + this.originTimeStamp + "+0500</dateTime.iso8601></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>transactionCurrency</name>\n" +
-                "<value><string>" + this.transactionCurrency + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>subscriberNumber</name>\n" +
-                "<value><string>" + subscriberNumber + "</string></value>\n" +
-                "</member>\n" +
-                "<member>\n" +
-                "<name>adjustmentAmountRelative</name>\n" +
-                "<value><string>-" + chargeAmount + "</string></value>\n" +
-                "</member>\n" +
-                "</struct>\n" +
-                "</value>\n" +
-                "</param>\n" +
-                "</params>\n" +
-                "</methodCall>";
-        System.out.println(inputXML);
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(request.getOriginDateTime().toInstant(), ZoneId.systemDefault());
-        Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-        SuccessBilledRecordsEntity successEntity = successBilledRecordsRepository.isAlreadyCharged(request.getMsisdn(),request.getOriginDateTime(),toDate);
-        if(successEntity !=null){
-            isAlreadyCharged =true;
-        }
-        if(!isAlreadyCharged) {
-            try {
-                response = Unirest.post(env.getProperty("jazz.api"))
-                        .header("Authorization", env.getProperty("jazz.api.authorization"))
-                        .header("Content-Type", "text/xml")
-                        .header("User-Agent", "UGw Server/4.3/1.0")
-                        .header("Cache-Control", "no-cache")
-                        .header("Pragma", "no-cache")
-                        .header("Host", "10.13.32.156:10010")
-                        .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-                        .header("Connection", "keep-alive")
-                        .body(inputXML).asString();
-                System.out.println("Raw Response-->" + response);
-                System.out.println("String Response-->" + response.getBody());
-                recArray = xmlConversion(response.getBody());
-                System.out.println(response.getStatus());
-            } catch (UnirestException e) {
-                logger.info("Response +" + response);
-                logger.error("Error while sending request " + e.getStackTrace());
+        if(isTestingFlagOff) {
+            Date date = new Date(System.currentTimeMillis());
+            DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
+            TimeZone PKT = TimeZone.getTimeZone("Asia/Karachi");
+            dateFormat.setTimeZone(PKT);
+            this.originTimeStamp = dateFormat.format(date);
+            LocalDateTime now = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+            String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
+            int chargeAmount = 0;
+            String subscriberNumber = "";
+            boolean isAlreadyCharged = false;
+            if (Long.toString(request.getMsisdn()).startsWith("92")) {
+                subscriberNumber = Long.toString(request.getMsisdn()).substring(2);
+            } else if (Long.toString(request.getMsisdn()).startsWith("0")) {
+                subscriberNumber = Long.toString(request.getMsisdn()).substring(1);
+            } else if (Long.toString(request.getMsisdn()).startsWith("920")) {
+                subscriberNumber = Long.toString(request.getMsisdn()).substring(3);
+            } else {
+                subscriberNumber = Long.toString(request.getMsisdn());
             }
-            String transID = recArray[0]; // TransactionID
-            System.out.println("Transaction Id-->" + transID);
-            if (recArray[1] != null) {
-                responseCode = Integer.valueOf(recArray[1]);
-                // ResponseCode
+            chargeAmount = (int) (request.getChargingAmount() + request.getTaxAmount());
+            System.out.println("Amount->" + request.getChargingAmount() + request.getTaxAmount());
+            String inputXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
+                    "<methodCall>\n" +
+                    "<methodName>" + this.methodName + "</methodName>\n" +
+                    "<params>\n" +
+                    "<param>\n" +
+                    "<value>\n" +
+                    "<struct>\n" +
+                    "<member>\n" +
+                    "<name>originNodeType</name>\n" +
+                    "<value><string>" + this.originNodeType + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>originHostName</name>\n" +
+                    "<value><string>" + this.originHostName + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>originTransactionID</name>\n" +
+                    "<value><string>" + transactionID + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>transactionType</name>\n" +
+                    "<value><string>" + this.transactionType + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>transactionCode</name>\n" +
+                    "<value><string>" + this.transactionCode + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>externalData1</name>\n" +
+                    "<value><string>" + this.externalData1 + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>externalData2</name>\n" +
+                    "<value><string>" + this.externalData2 + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>originTimeStamp</name>\n" +
+                    "<value><dateTime.iso8601>" + this.originTimeStamp + "+0500</dateTime.iso8601></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>transactionCurrency</name>\n" +
+                    "<value><string>" + this.transactionCurrency + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>subscriberNumber</name>\n" +
+                    "<value><string>" + subscriberNumber + "</string></value>\n" +
+                    "</member>\n" +
+                    "<member>\n" +
+                    "<name>adjustmentAmountRelative</name>\n" +
+                    "<value><string>-" + chargeAmount + "</string></value>\n" +
+                    "</member>\n" +
+                    "</struct>\n" +
+                    "</value>\n" +
+                    "</param>\n" +
+                    "</params>\n" +
+                    "</methodCall>";
+            System.out.println(inputXML);
+            Date date1 = new Date();
+            // LocalDateTime localDateTime = LocalDateTime.ofInstant(request.getOriginDateTime().toInstant(), ZoneId.systemDefault());
+            LocalDateTime localDateTime = LocalDateTime.ofInstant(date1.toInstant(), ZoneId.systemDefault());
+            Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
+            SuccessBilledRecordsEntity successEntity = successBilledRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
+            if (successEntity != null) {
+                isAlreadyCharged = true;
             }
-            if (responseCode == HttpStatus.FORBIDDEN.value()) {
-                res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
-                res.setMsg("UnAuthorized Request");
-                logger.info(String.format("RESPONSE CODE FORBIDDEN-%s", subscriberNumber));
-                return null;
-            }
+            if (!isAlreadyCharged) {
+                try {
+                    response = Unirest.post(env.getProperty("jazz.api"))
+                            .header("Authorization", env.getProperty("jazz.api.authorization"))
+                            .header("Content-Type", "text/xml")
+                            .header("User-Agent", "UGw Server/4.3/1.0")
+                            .header("Cache-Control", "no-cache")
+                            .header("Pragma", "no-cache")
+                            .header("Host", "10.13.32.156:10010")
+                            .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
+                            .header("Connection", "keep-alive")
+                            .body(inputXML).asString();
+                    System.out.println("Raw Response-->" + response);
+                    recArray = xmlConversion(response.getBody());
+                    System.out.println(response.getStatus());
+                } catch (UnirestException e) {
+                    logger.info("Response +" + response);
+                    logger.error("Error while sending request " + e.getStackTrace());
+                }
+                String transID = recArray[0]; // TransactionID
+                System.out.println("Transaction Id-->" + transID);
+                if (recArray[1] != null) {
+                    responseCode = Integer.valueOf(recArray[1]);
+                    // ResponseCode
+                }
+                if (response == null) {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
+                    res.setMsg("UnAuthorized Request");
+                    logger.info(String.format("RESPONSE CODE FORBIDDEN-%s", subscriberNumber));
+                } else if (responseCode == 0) {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                    res.setMsg("Subscribed SuccessFully");
+                } else if (responseCode == 102) {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
+                    res.setMsg("Subscriber not found");
+                } else if (responseCode == 124) {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                    res.setMsg("Insufficient Balance");
+                } else {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.OTHER_ERROR);
+                    res.setMsg("Other Error");
+                }
+                if (status != null)
+                    logger.info("RESPONSE MESSAGE: " + res.getMsg());
 
-            if (responseCode == 0) {
-                res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                res.setMsg("Subscribed SuccessFully");
-            } else if (responseCode == 102) {
-                res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
-                res.setMsg("Subscriber not found");
-            } else if (responseCode == 124) {
-                res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                res.setMsg("Insufficient Balance");
+                if (responseCode == 0) {
+                    saveSuccessRecords(res, request);
+                } else {
+                    logger.info("Tyring to insert In Failed Record Table");
+                    saveFailedRecords(res, request);
+                }
             } else {
                 res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.OTHER_ERROR);
-                res.setMsg("Other Error");
-            }
-            if (status != null)
-                logger.info("RESPONSE MESSAGE: " + res.getMsg());
-
-            if (responseCode == 0) {
-                saveSuccessRecords(res, request);
-            } else {
-                logger.info("Tyring to insert In Failed Record Table");
-                saveFailedRecords(res, request);
+                res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
+                res.setMsg("Already Charged");
             }
         }else {
+            saveSuccessRecords(res, request);
             res.setCorrelationId(request.getCorrelationId());
-            res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
-            res.setMsg("Already Charged");
+            res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+            res.setMsg("Subscribed SuccessFully");
         }
 
         return res;
@@ -228,6 +233,7 @@ public class JazzCharging {
         entity.setChargingMechanism(3);
         entity.setShareAmount(req.getShareAmount());
         entity.setChargedAmount(req.getChargingAmount());
+        entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
         entity.setChargeTime(new Timestamp(req.getOriginDateTime().getTime()));
         try {
@@ -245,10 +251,13 @@ public class JazzCharging {
         entity.setVpAccountId(req.getVendorPlanId());
         entity.setOperatorId(req.getOperatorId());
         entity.setChargingMechanism(3);
-        entity.setShareAmount(req.getShareAmount());
+        entity.setCorrelationid(req.getCorrelationId());
+        entity.setSharedAmount(req.getShareAmount());
         entity.setChargeAmount(req.getChargingAmount());
         entity.setMsisdn(req.getMsisdn());
-        entity.setDateTime(new Timestamp(req.getOriginDateTime().getTime()));
+        Date date2 = new Date();
+        //entity.setDateTime(new Timestamp(req.getOriginDateTime().getTime()));
+        entity.setDateTime(new Timestamp(date2.getTime()));
         entity.setReason(res.getMsg());
         entity.setStatusCode(res.getCode());
         try {

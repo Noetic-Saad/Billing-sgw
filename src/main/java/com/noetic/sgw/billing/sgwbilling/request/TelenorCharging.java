@@ -39,6 +39,7 @@ public class TelenorCharging {
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
     private String accessToken = "";
+    private boolean testing = true;
 
     public TelenorCharging(Environment env) {
         this.env = env;
@@ -65,40 +66,38 @@ public class TelenorCharging {
             subscriberNumber = Long.toString(req.getMsisdn());
         }
         chargeAmount = (int)(req.getChargingAmount()+req.getTaxAmount());
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(req.getOriginDateTime().toInstant(), ZoneId.systemDefault());
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(new Date().toInstant(), ZoneId.systemDefault());
         Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-        SuccessBilledRecordsEntity scuccessRecords = successBilledRecordsRepository.isAlreadyCharged(req.getMsisdn(),req.getOriginDateTime(),toDate);
-        if(scuccessRecords != null){
-            isAlreadyCharged =true;
-        }
-        if(!isAlreadyCharged) {
-            HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
-                    .header("authorization", "Bearer " + accessToken)
-                    .header("content-type", "application/json")
-                    .header("cache-control", "no-cache")
-                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
-                    .asJson();
-            logger.info("Charging Api Response " + response.getBody().toPrettyString());
-            if (response.getStatus() == 200) {
-                saveSuccessRecords(res, req);
-                res.setCorrelationId(req.getCorrelationId());
-                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                res.setMsg("Subscribed SuccessFully");
-            } else if (response.getStatus() == 403) {
-                res.setCorrelationId(req.getCorrelationId());
-                res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
-                res.setMsg("UnAuthorized Request");
-                saveFailedRecords(res, req);
-            } else if (response.getStatus() == 500) {
-                res.setCorrelationId(req.getCorrelationId());
-                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                res.setMsg("Insufficient Balance");
-                saveFailedRecords(res, req);
-            }
+        SuccessBilledRecordsEntity scuccessRecords = successBilledRecordsRepository.isAlreadyCharged(req.getMsisdn(),new Date(),toDate);
+        if(!testing) {
+                HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
+                        .header("authorization", "Bearer " + accessToken)
+                        .header("content-type", "application/json")
+                        .header("cache-control", "no-cache")
+                        .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
+                        .asJson();
+                logger.info("Charging Api Response " + response.getBody().toPrettyString());
+                if (response.getStatus() == 200) {
+                    res.setCorrelationId(req.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                    res.setMsg("Subscribed SuccessFully");
+                    saveSuccessRecords(res, req);
+                } else if (response.getStatus() == 403) {
+                    res.setCorrelationId(req.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
+                    res.setMsg("UnAuthorized Request");
+                    saveFailedRecords(res, req);
+                } else if (response.getStatus() == 500) {
+                    res.setCorrelationId(req.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                    res.setMsg("Insufficient Balance");
+                    saveFailedRecords(res, req);
+                }
         }else {
             res.setCorrelationId(req.getCorrelationId());
-            res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
-            res.setMsg("Already Charged");
+            res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+            res.setMsg("Subscribed SuccessFully");
+            saveSuccessRecords(res, req);
         }
         return res;
     }
@@ -137,8 +136,17 @@ public class TelenorCharging {
         entity.setChargingMechanism(3);
         entity.setShareAmount(req.getShareAmount());
         entity.setChargedAmount(req.getChargingAmount());
+        entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
+        entity.setCorrelationid(req.getCorrelationId());
+        entity.setVpAccountId(req.getVendorPlanId());
+        entity.setRequestType("Auto Renewal Telenor");
         entity.setChargeTime(new Timestamp(req.getOriginDateTime().getTime()));
+        if(req.getAttempts()==0){
+            entity.setAttempts(1);
+        }else {
+            entity.setAttempts(req.getAttempts());
+        }
         try {
             successBilledRecordsRepository.save(entity);
             logger.info("Records For Success Billing Inserted Successfull");
@@ -154,12 +162,18 @@ public class TelenorCharging {
         entity.setVpAccountId(req.getVendorPlanId());
         entity.setOperatorId(req.getOperatorId());
         entity.setChargingMechanism(3);
-        entity.setShareAmount(req.getShareAmount());
+        entity.setSharedAmount(req.getShareAmount());
         entity.setChargeAmount(req.getChargingAmount());
+        entity.setCorrelationid(res.getCorrelationId());
         entity.setMsisdn(req.getMsisdn());
-        entity.setDateTime(new Timestamp(req.getOriginDateTime().getTime()));
+        entity.setDateTime(new Timestamp(new Date().getTime()));
         entity.setReason(res.getMsg());
         entity.setStatusCode(res.getCode());
+        if(req.getAttempts()==0){
+            entity.setAttempts(1);
+        }else {
+            entity.setAttempts(req.getAttempts());
+        }
         try {
             failedRecordsRepository.save(entity);
             logger.info("Records for failed Billing Inserted Successfull");

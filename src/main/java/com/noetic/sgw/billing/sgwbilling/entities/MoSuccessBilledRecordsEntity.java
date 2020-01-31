@@ -5,22 +5,21 @@ import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
-@Table(name = "success_billed_records", schema = "public", catalog = "sgw")
-public class SuccessBilledRecordsEntity {
+@Table(name = "mo_success_billed_records", schema = "public", catalog = "sgw")
+public class MoSuccessBilledRecordsEntity {
     private int id;
     private Timestamp chargeTime;
     private Double chargedAmount;
+    private Double taxAmount;
     private Integer chargingMechanism;
     private Long msisdn;
     private Integer operatorId;
-    private Double shareAmount;
-    private Integer vpAccountId;
-    private String correlationid;
-    private Double taxAmount;
-    private Integer vendorPlanId;
+    private Double sharedAmount;
+    private Integer partnerPlanId;
     private String trackerId;
     private String requestType;
     private Integer attempts;
+    private String correlationid;
 
     @Id
     @Column(name = "id")
@@ -55,6 +54,16 @@ public class SuccessBilledRecordsEntity {
     }
 
     @Basic
+    @Column(name = "tax_amount")
+    public Double getTaxAmount() {
+        return taxAmount;
+    }
+
+    public void setTaxAmount(Double taxAmount) {
+        this.taxAmount = taxAmount;
+    }
+
+    @Basic
     @Column(name = "charging_mechanism")
     public Integer getChargingMechanism() {
         return chargingMechanism;
@@ -86,62 +95,22 @@ public class SuccessBilledRecordsEntity {
 
     @Basic
     @Column(name = "shared_amount")
-    public Double getShareAmount() {
-        return shareAmount;
+    public Double getSharedAmount() {
+        return sharedAmount;
     }
 
-    public void setShareAmount(Double shareAmount) {
-        this.shareAmount = shareAmount;
-    }
-
-    @Basic
-    @Column(name = "vendor_plan_id")
-    public Integer getVpAccountId() {
-        return vpAccountId;
-    }
-
-    public void setVpAccountId(Integer vpAccountId) {
-        this.vpAccountId = vpAccountId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SuccessBilledRecordsEntity entity = (SuccessBilledRecordsEntity) o;
-        return id == entity.id &&
-                Objects.equals(chargeTime, entity.chargeTime) &&
-                Objects.equals(chargedAmount, entity.chargedAmount) &&
-                Objects.equals(chargingMechanism, entity.chargingMechanism) &&
-                Objects.equals(msisdn, entity.msisdn) &&
-                Objects.equals(operatorId, entity.operatorId) &&
-                Objects.equals(shareAmount, entity.shareAmount) &&
-                Objects.equals(vpAccountId, entity.vpAccountId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, chargeTime, chargedAmount, chargingMechanism, msisdn, operatorId, shareAmount, vpAccountId);
+    public void setSharedAmount(Double sharedAmount) {
+        this.sharedAmount = sharedAmount;
     }
 
     @Basic
-    @Column(name = "correlationid")
-    public String getCorrelationid() {
-        return correlationid;
+    @Column(name = "partner_plan_id")
+    public Integer getPartnerPlanId() {
+        return partnerPlanId;
     }
 
-    public void setCorrelationid(String correlationid) {
-        this.correlationid = correlationid;
-    }
-
-    @Basic
-    @Column(name = "tax_amount")
-    public Double getTaxAmount() {
-        return taxAmount;
-    }
-
-    public void setTaxAmount(Double taxAmount) {
-        this.taxAmount = taxAmount;
+    public void setPartnerPlanId(Integer partnerPlanId) {
+        this.partnerPlanId = partnerPlanId;
     }
 
     @Basic
@@ -172,5 +141,40 @@ public class SuccessBilledRecordsEntity {
 
     public void setAttempts(Integer attempts) {
         this.attempts = attempts;
+    }
+
+    @Basic
+    @Column(name = "correlationid")
+    public String getCorrelationid() {
+        return correlationid;
+    }
+
+    public void setCorrelationid(String correlationid) {
+        this.correlationid = correlationid;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MoSuccessBilledRecordsEntity that = (MoSuccessBilledRecordsEntity) o;
+        return id == that.id &&
+                Objects.equals(chargeTime, that.chargeTime) &&
+                Objects.equals(chargedAmount, that.chargedAmount) &&
+                Objects.equals(taxAmount, that.taxAmount) &&
+                Objects.equals(chargingMechanism, that.chargingMechanism) &&
+                Objects.equals(msisdn, that.msisdn) &&
+                Objects.equals(operatorId, that.operatorId) &&
+                Objects.equals(sharedAmount, that.sharedAmount) &&
+                Objects.equals(partnerPlanId, that.partnerPlanId) &&
+                Objects.equals(trackerId, that.trackerId) &&
+                Objects.equals(requestType, that.requestType) &&
+                Objects.equals(attempts, that.attempts) &&
+                Objects.equals(correlationid, that.correlationid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, chargeTime, chargedAmount, taxAmount, chargingMechanism, msisdn, operatorId, sharedAmount, partnerPlanId, trackerId, requestType, attempts, correlationid);
     }
 }

@@ -2,34 +2,18 @@ package com.noetic.sgw.billing.sgwbilling.util;
 
 import java.util.Date;
 
-public class ChargeRequestProperties {
+public class MoRequestProperties {
 
     private long msisdn;
-    private Integer operatorId;
-    private Integer vendorPlanId;
+    private long partnerPlanId;
     private String correlationId;
     private Date originDateTime;
     private double chargingAmount;
     private String shortcode;
     private double taxAmount;
     private double shareAmount;
-    private int attempts;
-
-    public Integer getOperatorId() {
-        return operatorId;
-    }
-
-    public void setOperatorId(Integer operatorId) {
-        this.operatorId = operatorId;
-    }
-
-    public double getShareAmount() {
-        return shareAmount;
-    }
-
-    public void setShareAmount(double shareAmount) {
-        this.shareAmount = shareAmount;
-    }
+    private long operatorId;
+    private int chargingMechanism;
 
     public long getMsisdn() {
         return msisdn;
@@ -39,12 +23,12 @@ public class ChargeRequestProperties {
         this.msisdn = msisdn;
     }
 
-    public Integer getVendorPlanId() {
-        return vendorPlanId;
+    public long getPartnerPlanId() {
+        return partnerPlanId;
     }
 
-    public void setVendorPlanId(Integer vendorPlanId) {
-        this.vendorPlanId = vendorPlanId;
+    public void setPartnerPlanId(long partnerPlanId) {
+        this.partnerPlanId = partnerPlanId;
     }
 
     public String getCorrelationId() {
@@ -87,11 +71,27 @@ public class ChargeRequestProperties {
         this.taxAmount = taxAmount;
     }
 
-    public int getAttempts() {
-        return attempts;
+    public long getOperatorId() {
+        return operatorId;
     }
 
-    public void setAttempts(int attempts) {
-        this.attempts = attempts;
+    public void setOperatorId(long operatorId) {
+        this.operatorId = operatorId;
+    }
+
+    public double getShareAmount() {
+        return shareAmount;
+    }
+
+    public void setShareAmount(double shareAmount) {
+        this.shareAmount = shareAmount;
+    }
+
+    public int getChargingMechanism() {
+        return chargingMechanism;
+    }
+
+    public void setChargingMechanism(int chargingMechanism) {
+        this.chargingMechanism = chargingMechanism;
     }
 }
