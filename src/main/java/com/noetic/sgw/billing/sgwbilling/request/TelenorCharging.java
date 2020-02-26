@@ -1,9 +1,12 @@
 package com.noetic.sgw.billing.sgwbilling.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.SuccessBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.FailedRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.repository.GamesBillingRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.SuccessBilledRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.Response;
@@ -22,10 +25,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class TelenorCharging {
@@ -40,14 +40,20 @@ public class TelenorCharging {
     FailedRecordsRepository failedRecordsRepository;
     private String accessToken = "";
     private boolean testing = true;
+    @Autowired
+    private GamesBillingRecordsRepository gamesBillingRecordsRepository;
+    @Autowired
+    private StartConfiguration startConfiguration;
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public TelenorCharging(Environment env) {
         this.env = env;
         accessToken = getNewAccessToken();
-        if(accessToken == null) {
+        if (accessToken == null) {
             System.exit(1);
         }
     }
+
     private String partnerID = "TP-Noetic";
     private String productID = "Noetic-Weekly-Sub-charge";
     private String res = null;
@@ -60,45 +66,42 @@ public class TelenorCharging {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
         String subscriberNumber = "";
-        if(Long.toString(req.getMsisdn()).startsWith("92")) {
+        if (Long.toString(req.getMsisdn()).startsWith("92")) {
             subscriberNumber = Long.toString(req.getMsisdn()).replaceFirst("92", "0");
-        }else {
+        } else {
             subscriberNumber = Long.toString(req.getMsisdn());
         }
-        chargeAmount = (int)(req.getChargingAmount()+req.getTaxAmount());
+        chargeAmount = (int) (req.getChargingAmount() + req.getTaxAmount());
         LocalDateTime localDateTime = LocalDateTime.ofInstant(new Date().toInstant(), ZoneId.systemDefault());
         Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-        SuccessBilledRecordsEntity scuccessRecords = successBilledRecordsRepository.isAlreadyCharged(req.getMsisdn(),new Date(),toDate);
-        if(!testing) {
-                HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
-                        .header("authorization", "Bearer " + accessToken)
-                        .header("content-type", "application/json")
-                        .header("cache-control", "no-cache")
-                        .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
-                        .asJson();
-                logger.info("Charging Api Response " + response.getBody().toPrettyString());
-                if (response.getStatus() == 200) {
-                    res.setCorrelationId(req.getCorrelationId());
-                    res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                    res.setMsg("Subscribed SuccessFully");
-                    saveSuccessRecords(res, req);
-                } else if (response.getStatus() == 403) {
-                    res.setCorrelationId(req.getCorrelationId());
-                    res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
-                    res.setMsg("UnAuthorized Request");
-                    saveFailedRecords(res, req);
-                } else if (response.getStatus() == 500) {
-                    res.setCorrelationId(req.getCorrelationId());
-                    res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                    res.setMsg("Insufficient Balance");
-                    saveFailedRecords(res, req);
-                }
-        }else {
+        SuccessBilledRecordsEntity scuccessRecords = successBilledRecordsRepository.isAlreadyCharged(req.getMsisdn(), new Date(), toDate);
+        if (!testing) {
+            HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
+                    .header("authorization", "Bearer " + accessToken)
+                    .header("content-type", "application/json")
+                    .header("cache-control", "no-cache")
+                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
+                    .asJson();
+            logger.info("Charging Api Response " + response.getBody().toPrettyString());
+            if (response.getStatus() == 200) {
+                res.setCorrelationId(req.getCorrelationId());
+                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                res.setMsg("Subscribed SuccessFully");
+            } else if (response.getStatus() == 403) {
+                res.setCorrelationId(req.getCorrelationId());
+                res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
+                res.setMsg("UnAuthorized Request");
+            } else if (response.getStatus() == 500) {
+                res.setCorrelationId(req.getCorrelationId());
+                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                res.setMsg("Insufficient Balance");
+            }
+        } else {
             res.setCorrelationId(req.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg("Subscribed SuccessFully");
-            saveSuccessRecords(res, req);
         }
+        saveChargingRecords(res,req);
         return res;
     }
 
@@ -128,59 +131,38 @@ public class TelenorCharging {
         return null;
     }
 
-    private String saveSuccessRecords(Response res,ChargeRequestProperties req){
-
-        SuccessBilledRecordsEntity entity = new SuccessBilledRecordsEntity();
-        entity.setVpAccountId(req.getVendorPlanId());
-        entity.setOperatorId(req.getOperatorId());
-        entity.setChargingMechanism(3);
+    private void saveChargingRecords(Response res, ChargeRequestProperties req) {
+        GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
+        entity.setAmount(req.getChargingAmount());
+        entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
+        if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+            entity.setIsCharged(1);
+        } else {
+            entity.setIsCharged(0);
+        }
+        entity.setIsPostpaid(0);
+        entity.setOparatorId(req.getOperatorId().shortValue());
         entity.setShareAmount(req.getShareAmount());
-        entity.setChargedAmount(req.getChargingAmount());
         entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
-        entity.setCorrelationid(req.getCorrelationId());
-        entity.setVpAccountId(req.getVendorPlanId());
-        entity.setRequestType("Auto Renewal Telenor");
-        entity.setChargeTime(new Timestamp(req.getOriginDateTime().getTime()));
-        if(req.getAttempts()==0){
-            entity.setAttempts(1);
-        }else {
-            entity.setAttempts(req.getAttempts());
+        entity.setChargingMechanism(req.getOperatorId().shortValue());
+        entity.setTaxAmount(req.getTaxAmount());
+        entity.setVendorPlanId(req.getVendorPlanId().longValue());
+        if (req.getIsRenewal() == 1) {
+            entity.setNoAttemptsMonthly(req.getAttempts());
+            entity.setNoOfDailyAttempts(req.getDailyAttempts());
+
+        } else {
+            entity.setNoAttemptsMonthly(1);
+            entity.setNoOfDailyAttempts(1);
         }
+        String transactionId = Base64.getEncoder().encodeToString((LocalDateTime.now().format(formatter) + UUID.randomUUID().toString()).getBytes());
+        entity.setTransactionId(transactionId);
         try {
-            successBilledRecordsRepository.save(entity);
-            logger.info("Records For Success Billing Inserted Successfull");
-        }catch (InvalidJpaQueryMethodException e){
-            logger.error("Jpa Exception Caught Here: "+e.getCause());
-
+            gamesBillingRecordsRepository.save(entity);
+            logger.info("CHARGING | TELENORCHARGING CLASS | RECORDS INSERTED FOR MSISDN " + req.getMsisdn());
+        } catch (InvalidJpaQueryMethodException e) {
+            logger.info("CHARGING | TELENORCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS " + e.getCause());
         }
-        return "";
-    }
-    private String saveFailedRecords(Response res,ChargeRequestProperties req){
-
-        FailedBilledRecordsEntity entity = new FailedBilledRecordsEntity();
-        entity.setVpAccountId(req.getVendorPlanId());
-        entity.setOperatorId(req.getOperatorId());
-        entity.setChargingMechanism(3);
-        entity.setSharedAmount(req.getShareAmount());
-        entity.setChargeAmount(req.getChargingAmount());
-        entity.setCorrelationid(res.getCorrelationId());
-        entity.setMsisdn(req.getMsisdn());
-        entity.setDateTime(new Timestamp(new Date().getTime()));
-        entity.setReason(res.getMsg());
-        entity.setStatusCode(res.getCode());
-        if(req.getAttempts()==0){
-            entity.setAttempts(1);
-        }else {
-            entity.setAttempts(req.getAttempts());
-        }
-        try {
-            failedRecordsRepository.save(entity);
-            logger.info("Records for failed Billing Inserted Successfull");
-        }catch (InvalidJpaQueryMethodException e){
-            logger.error("Jpa Exception Caught Here: "+e.getCause());
-
-        }
-        return "";
     }
 }

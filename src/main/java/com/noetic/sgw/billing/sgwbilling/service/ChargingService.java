@@ -5,6 +5,7 @@ import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.request.JazzCharging;
 import com.noetic.sgw.billing.sgwbilling.request.TelenorCharging;
 import com.noetic.sgw.billing.sgwbilling.request.UcipRequest;
+import com.noetic.sgw.billing.sgwbilling.request.ZongCharging;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.MoRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.MoResponse;
@@ -27,6 +28,8 @@ class ChargingService {
     StartConfiguration startConfiguration;
     @Autowired
     UcipRequest ucipRequest;
+    @Autowired
+    ZongCharging zongCharging;
 
 
     Response response = null;
@@ -47,7 +50,7 @@ class ChargingService {
         this.telenorCharging = telenorCharging;
     }
 
-    public Response processRequest(ChargeRequestProperties req) throws JsonProcessingException {
+    public Response processRequest(ChargeRequestProperties req) {
         operator_id = req.getOperatorId();
         if (operator_id == startConfiguration.getTelenor()) {
             response = telenorCharging.chargeRequest(req);
@@ -56,7 +59,7 @@ class ChargingService {
         } else if (operator_id == startConfiguration.getWarid()) {
 
         } else if (operator_id == startConfiguration.getZong()) {
-
+            response = zongCharging.sendChargingRequest(req);
         } else {
 
         }

@@ -1,12 +1,10 @@
 package com.noetic.sgw.billing.sgwbilling.config;
 
-import com.noetic.sgw.billing.sgwbilling.entities.ChargingMechanismEntity;
-import com.noetic.sgw.billing.sgwbilling.entities.OperatorEntity;
-import com.noetic.sgw.billing.sgwbilling.entities.OperatorPlanEntity;
-import com.noetic.sgw.billing.sgwbilling.repository.ChargingMechanismRepository;
-import com.noetic.sgw.billing.sgwbilling.repository.OperatorPlanRepository;
-import com.noetic.sgw.billing.sgwbilling.repository.OperatorRepository;
+import com.noetic.sgw.billing.sgwbilling.entities.*;
+import com.noetic.sgw.billing.sgwbilling.repository.*;
 import net.bytebuddy.asm.Advice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,17 +16,24 @@ import java.util.Map;
 @Service
 public class StartConfiguration {
 
+
+
     @Autowired
     ChargingMechanismRepository mechanismRepository;
     @Autowired
     OperatorPlanRepository operatorPlanRepository;
     @Autowired
     OperatorRepository operatorRepository;
+    @Autowired ResponseTypeRepository responseTypeRepository;
+    @Autowired
+    TestMsisdnsRepository testMsisdnsRepository;
 
     public Map<Integer,List<OperatorPlanEntity>> operatorPlanMap = new HashMap<>();
     public Map<Integer,Integer> trafficPercentageMap = new HashMap<>();
     public Map<Integer,Integer> dailyCap = new HashMap<>();
     public Map<String,Integer> chargingMechanismMap = new HashMap<>();
+    public Map<String, ResponseTypeEntity> responseTypeEntityMap = new HashMap<>();
+    private Map<Long, TestMsisdnsEntity> testMsisdnsMap = new HashMap<>();
 
     private int jazz = 0;
     private int warid = 0;
@@ -42,6 +47,20 @@ public class StartConfiguration {
         list.forEach(chargingMechanismEntity -> trafficPercentageMap.put(chargingMechanismEntity.getId(),chargingMechanismEntity.getTotalTraffic()));
         list.forEach(chargingMechanismEntity -> dailyCap.put(chargingMechanismEntity.getId(),chargingMechanismEntity.getDailyCap()));
         list.forEach(chargingMechanismEntity -> chargingMechanismMap.put(chargingMechanismEntity.getCode(),chargingMechanismEntity.getId()));
+    }
+
+    public void loadResponseTypes() {
+        Map<String, ResponseTypeEntity> map = new HashMap<>();
+        List<ResponseTypeEntity> list = responseTypeRepository.findAll();
+        list.forEach(entity -> map.put(entity.getCode(), entity));
+        responseTypeEntityMap = map;
+    }
+
+    public void loadTestMsisdns() {
+        List<TestMsisdnsEntity> list = testMsisdnsRepository.findAll();
+        Map<Long, TestMsisdnsEntity> map = new HashMap<>();
+        list.forEach(entity -> map.put(entity.getMsisdn(), entity));
+        testMsisdnsMap = map;
     }
 
     public void loadOperator(){
@@ -104,8 +123,20 @@ public class StartConfiguration {
         return operatorPlanMap.get(operatorID);
     }
 
+    public boolean isTestMsisdn(Long msisdn){
+        if(testMsisdnsMap.containsKey(msisdn)){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
     public int getJazz() {
         return jazz;
+    }
+
+    public String getResultStatusDescription(String code) {
+        return responseTypeEntityMap.get(code).getDescription();
     }
 
     public int getWarid() {

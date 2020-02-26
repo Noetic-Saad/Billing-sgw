@@ -14,6 +14,8 @@ public class ChargeRequestProperties {
     private double taxAmount;
     private double shareAmount;
     private int attempts;
+    private int isRenewal;
+    private int dailyAttempts;
 
     public Integer getOperatorId() {
         return operatorId;
@@ -93,5 +95,21 @@ public class ChargeRequestProperties {
 
     public void setAttempts(int attempts) {
         this.attempts = attempts;
+    }
+
+    public int getIsRenewal() {
+        return isRenewal;
+    }
+
+    public void setIsRenewal(int isRenewal) {
+        this.isRenewal = isRenewal;
+    }
+
+    public int getDailyAttempts() {
+        return dailyAttempts;
+    }
+
+    public void setDailyAttempts(int dailyAttempts) {
+        this.dailyAttempts = dailyAttempts;
     }
 }

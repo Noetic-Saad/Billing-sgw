@@ -1,9 +1,12 @@
 package com.noetic.sgw.billing.sgwbilling.request;
 
 
+import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.SuccessBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.FailedRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.repository.GamesBillingRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.SuccessBilledRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.Response;
@@ -35,9 +38,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Random;
-import java.util.TimeZone;
+import java.util.*;
 
 @Service
 public class JazzCharging {
@@ -49,6 +50,7 @@ public class JazzCharging {
     SuccessBilledRecordsRepository successBilledRecordsRepository;
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
+    @Autowired StartConfiguration startConfiguration;
     private boolean isTestingFlagOff = false;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
@@ -63,6 +65,9 @@ public class JazzCharging {
     private String status="Fail";
     private String[] recArray = new String[2];
     HttpResponse<String> response;
+    @Autowired
+    private GamesBillingRecordsRepository gamesBillingRecordsRepository;
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public Response jazzChargeRequest(ChargeRequestProperties request) {
         Response res = new Response();
@@ -145,12 +150,10 @@ public class JazzCharging {
                     "</param>\n" +
                     "</params>\n" +
                     "</methodCall>";
-            System.out.println(inputXML);
             Date date1 = new Date();
-            // LocalDateTime localDateTime = LocalDateTime.ofInstant(request.getOriginDateTime().toInstant(), ZoneId.systemDefault());
             LocalDateTime localDateTime = LocalDateTime.ofInstant(date1.toInstant(), ZoneId.systemDefault());
             Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-            SuccessBilledRecordsEntity successEntity = successBilledRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
+            GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
             if (successEntity != null) {
                 isAlreadyCharged = true;
             }
@@ -181,93 +184,77 @@ public class JazzCharging {
                 }
                 if (response == null) {
                     res.setCorrelationId(request.getCorrelationId());
-                    res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
-                    res.setMsg("UnAuthorized Request");
+                    res.setCode(Integer.parseInt(ResponseTypeConstants.REMOTE_SERVER_CONNECTION_ERROR));
+                    res.setMsg(startConfiguration.getResultStatusDescription(ResponseTypeConstants.REMOTE_SERVER_CONNECTION_ERROR));
                     logger.info(String.format("RESPONSE CODE FORBIDDEN-%s", subscriberNumber));
                 } else if (responseCode == 0) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                    res.setMsg("Subscribed SuccessFully");
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
                 } else if (responseCode == 102) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
-                    res.setMsg("Subscriber not found");
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND)));
                 } else if (responseCode == 124) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                    res.setMsg("Insufficient Balance");
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
                 } else {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.OTHER_ERROR);
-                    res.setMsg("Other Error");
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.OTHER_ERROR)));
                 }
                 if (status != null)
                     logger.info("RESPONSE MESSAGE: " + res.getMsg());
-
-                if (responseCode == 0) {
-                    saveSuccessRecords(res, request);
-                } else {
-                    logger.info("Tyring to insert In Failed Record Table");
-                    saveFailedRecords(res, request);
-                }
             } else {
                 res.setCorrelationId(request.getCorrelationId());
                 res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
-                res.setMsg("Already Charged");
+                res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
             }
         }else {
-            saveSuccessRecords(res, request);
+            saveChargingRecords(res, request);
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-            res.setMsg("Subscribed SuccessFully");
+            res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
         }
-
+        saveChargingRecords(res, request);
         return res;
     }
 
-    private void saveSuccessRecords(Response res, ChargeRequestProperties req) {
-        System.out.println("Control Came Here");
-        SuccessBilledRecordsEntity entity = new SuccessBilledRecordsEntity();
-        entity.setVpAccountId(req.getVendorPlanId());
-        entity.setOperatorId(req.getOperatorId());
-        entity.setChargingMechanism(3);
+    private void saveChargingRecords(Response res, ChargeRequestProperties req) {
+        GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
+        entity.setAmount(req.getChargingAmount());
+        entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
+        if(res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL){
+            entity.setIsCharged(1);
+        }else {
+            entity.setIsCharged(0);
+        }
+        entity.setIsPostpaid(0);
+        entity.setOparatorId(req.getOperatorId().shortValue());
         entity.setShareAmount(req.getShareAmount());
-        entity.setChargedAmount(req.getChargingAmount());
         entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
-        entity.setChargeTime(new Timestamp(req.getOriginDateTime().getTime()));
+        entity.setChargingMechanism(req.getOperatorId().shortValue());
+        entity.setTaxAmount(req.getTaxAmount());
+        entity.setVendorPlanId(req.getVendorPlanId().longValue());
+        if(req.getIsRenewal()==1){
+            entity.setNoOfDailyAttempts(req.getDailyAttempts());
+            entity.setNoAttemptsMonthly(req.getAttempts());
+        }else {
+            entity.setNoAttemptsMonthly(1);
+            entity.setNoOfDailyAttempts(1);
+        }
+        String transactionId = Base64.getEncoder().encodeToString((LocalDateTime.now().format(formatter) + UUID.randomUUID().toString()).getBytes());
+        entity.setTransactionId(transactionId);
         try {
-            successBilledRecordsRepository.save(entity);
-            logger.info("Records For Success Billing Inserted Successfull");
+            gamesBillingRecordsRepository.save(entity);
+            logger.info("CHARGING | JAZZCHARGING CLASS | RECORDS INSERTED FOR MSISDN "+req.getMsisdn());
         } catch (InvalidJpaQueryMethodException e) {
-            logger.error("Jpa Exception Caught Here: " + e.getCause());
-
+            logger.info("CHARGING | JAZZCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS "+e.getCause());
         }
     }
 
-    private void saveFailedRecords(Response res, ChargeRequestProperties req) {
-        System.out.println("Control Came Here");
-        FailedBilledRecordsEntity entity = new FailedBilledRecordsEntity();
-        entity.setVpAccountId(req.getVendorPlanId());
-        entity.setOperatorId(req.getOperatorId());
-        entity.setChargingMechanism(3);
-        entity.setCorrelationid(req.getCorrelationId());
-        entity.setSharedAmount(req.getShareAmount());
-        entity.setChargeAmount(req.getChargingAmount());
-        entity.setMsisdn(req.getMsisdn());
-        Date date2 = new Date();
-        //entity.setDateTime(new Timestamp(req.getOriginDateTime().getTime()));
-        entity.setDateTime(new Timestamp(date2.getTime()));
-        entity.setReason(res.getMsg());
-        entity.setStatusCode(res.getCode());
-        try {
-            failedRecordsRepository.save(entity);
-            logger.info("Records for failed Billing Inserted Successfull");
-        } catch (InvalidJpaQueryMethodException e) {
-            logger.error("Jpa Exception Caught Here: " + e.getCause());
-
-        }
-    }
     protected
     String[] xmlConversion(String xml) {
         String[] retArray = new String[2];
@@ -337,8 +324,8 @@ public class JazzCharging {
                 } //End Response Code IF
             }
         } catch (SAXParseException err) {
-            System.out.println("** Parsing error" + ", line " + err.getLineNumber() + ", uri " + err.getSystemId());
-            System.out.println(" " + err.getMessage());
+            logger.info("CHARGING | JAZZCHARGING CLASS | ** Parsing error" + ", line " + err.getLineNumber() + ", uri " + err.getSystemId());
+            logger.info("CHARGING | JAZZCHARGING CLASS | SAXEXCEPTION | " + err.getMessage());
 
         } catch (SAXException e) {
             Exception x = e.getException();
