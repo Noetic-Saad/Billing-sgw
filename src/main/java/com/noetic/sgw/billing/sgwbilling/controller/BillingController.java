@@ -22,4 +22,9 @@ class BillingController {
     public Response chargeRequest(@RequestBody ChargeRequestProperties req) throws JsonProcessingException {
         return chargingService.processRequest(req);
     }
+
+    @PostMapping("/renewal")
+    public Response renewalChargeRequest(@RequestBody ChargeRequestProperties req) throws JsonProcessingException {
+        return chargingService.processRequest(req);
+    }
 }
