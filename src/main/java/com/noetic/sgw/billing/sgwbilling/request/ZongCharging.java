@@ -25,7 +25,7 @@ public class ZongCharging {
 
     private static final Logger log = LoggerFactory.getLogger(ZongCharging.class);
 
-    private static String SERVICE_ID_20 = "Noet20";
+    private static String SERVICE_ID_20 = "Noe20";
 
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
@@ -47,7 +47,7 @@ public class ZongCharging {
         }*/
         if (!isAlreadyCharged) {
             zongMMLRequest.logIn();
-            charginAmount = String.valueOf(request.getChargingAmount() * 100);
+            charginAmount = String.valueOf((int)request.getChargingAmount() * 100);
             String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
 
             log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
