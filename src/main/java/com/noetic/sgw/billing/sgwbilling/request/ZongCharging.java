@@ -41,10 +41,10 @@ public class ZongCharging {
         Date date1 = new Date();
         LocalDateTime localDateTime = LocalDateTime.ofInstant(date1.toInstant(), ZoneId.systemDefault());
         Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-        GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
+        /*GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
         if (successEntity != null) {
             isAlreadyCharged = true;
-        }
+        }*/
         if (!isAlreadyCharged) {
             zongMMLRequest.logIn();
             charginAmount = String.valueOf(request.getChargingAmount() * 100);

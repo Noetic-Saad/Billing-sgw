@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface GamesBillingRecordsRepository extends JpaRepository<GamesBillingRecordEntity,Long> {
-    @Query(value = "SELECT * FROM public.games_billing_record WHERE msisdn=:msisdn and and is_charged = 1 and is_renewal = 1 and date(charge_time) BETWEEN date(:fromDate) and date(:toDate)",nativeQuery = true)
+    @Query(value = "SELECT * FROM public.games_billing_record WHERE msisdn=:msisdn and is_charged = 1 and is_renewal = 1 and date(charge_time) BETWEEN date(:fromDate) and date(:toDate)",nativeQuery = true)
     GamesBillingRecordEntity isAlreadyCharged(@Param("msisdn") Long msisdn, @Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 
     @Query(value = "SELECT * FROM public.games_billing_record WHERE msisdn=:msisdn and date(charge_time) BETWEEN date(:fromDate) and date(:toDate) order by id desc limit 1",nativeQuery = true)
