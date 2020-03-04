@@ -95,6 +95,9 @@ public class TelenorCharging {
                 res.setCorrelationId(req.getCorrelationId());
                 res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
                 res.setMsg("Insufficient Balance");
+            }else {
+                getNewAccessToken();
+                chargeRequest(req);
             }
         } else {
             res.setCorrelationId(req.getCorrelationId());
