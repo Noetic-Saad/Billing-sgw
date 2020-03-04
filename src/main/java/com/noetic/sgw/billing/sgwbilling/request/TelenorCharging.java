@@ -127,7 +127,8 @@ public class TelenorCharging {
             System.out.println(token.getBody().toString());
             Map map = objectMapper.readValue(token.getBody().toPrettyString(), Map.class);
             System.out.println(map.get("access_token").toString());
-            return map.get("access_token").toString();
+            accessToken = map.get("access_token").toString();
+            return accessToken;
         } catch (Exception e) {
             e.printStackTrace();
         }
