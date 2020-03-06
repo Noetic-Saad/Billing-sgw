@@ -241,9 +241,11 @@ public class JazzCharging {
         if(req.getIsRenewal()==1){
             entity.setNoOfDailyAttempts(req.getDailyAttempts());
             entity.setNoAttemptsMonthly(req.getAttempts());
+            entity.setIsRenewal(1);
         }else {
             entity.setNoAttemptsMonthly(1);
             entity.setNoOfDailyAttempts(1);
+            entity.setIsRenewal(0);
         }
         String transactionId = Base64.getEncoder().encodeToString((LocalDateTime.now().format(formatter) + UUID.randomUUID().toString()).getBytes());
         entity.setTransactionId(transactionId);

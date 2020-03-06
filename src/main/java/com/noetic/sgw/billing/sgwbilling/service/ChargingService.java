@@ -50,7 +50,7 @@ class ChargingService {
         this.telenorCharging = telenorCharging;
     }
 
-    public Response processRequest(ChargeRequestProperties req) {
+    public Response processRequest(ChargeRequestProperties req) throws Exception {
         operator_id = req.getOperatorId();
         if (operator_id == startConfiguration.getTelenor()) {
             response = telenorCharging.chargeRequest(req);

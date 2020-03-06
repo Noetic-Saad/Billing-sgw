@@ -26,11 +26,15 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class TelenorCharging {
 
     Logger logger = LoggerFactory.getLogger(TelenorCharging.class);
+
+    public static  int n = 2;
 
     @Autowired
     private Environment env;
@@ -52,13 +56,15 @@ public class TelenorCharging {
         if (accessToken == null) {
             System.exit(1);
         }
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> getNewAccessToken(), 0, 50, TimeUnit.MINUTES);
     }
 
     private String partnerID = "TP-Noetic";
     private String productID = "Noetic-Weekly-Sub-charge";
     private String res = null;
 
-    public Response chargeRequest(ChargeRequestProperties req) {
+
+    public Response chargeRequest(ChargeRequestProperties req) throws Exception {
         LocalDateTime now = LocalDateTime.now();
         Response res = new Response();
         int chargeAmount = 0;
@@ -152,13 +158,14 @@ public class TelenorCharging {
         entity.setChargingMechanism(req.getOperatorId().shortValue());
         entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
-        if (req.getIsRenewal() == 1) {
-            entity.setNoAttemptsMonthly(req.getAttempts());
+        if(req.getIsRenewal()==1){
             entity.setNoOfDailyAttempts(req.getDailyAttempts());
-
-        } else {
+            entity.setNoAttemptsMonthly(req.getAttempts());
+            entity.setIsRenewal(1);
+        }else {
             entity.setNoAttemptsMonthly(1);
             entity.setNoOfDailyAttempts(1);
+            entity.setIsRenewal(0);
         }
         String transactionId = Base64.getEncoder().encodeToString((LocalDateTime.now().format(formatter) + UUID.randomUUID().toString()).getBytes());
         entity.setTransactionId(transactionId);
@@ -168,5 +175,7 @@ public class TelenorCharging {
         } catch (InvalidJpaQueryMethodException e) {
             logger.info("CHARGING | TELENORCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS " + e.getCause());
         }
+
     }
+
 }
