@@ -30,6 +30,7 @@ public class ZongCharging {
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private boolean testing = true;
     @Autowired
     private StartConfiguration startConfiguration;
     @Autowired
@@ -45,30 +46,36 @@ public class ZongCharging {
         if (successEntity != null) {
             isAlreadyCharged = true;
         }*/
-        if (!isAlreadyCharged) {
-            zongMMLRequest.logIn();
-            charginAmount = String.valueOf((int)request.getChargingAmount() * 100);
-            String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
+        if(!testing) {
+            if (!isAlreadyCharged) {
+                zongMMLRequest.logIn();
+                charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
+                String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
 
-            log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
-            String[] zongRes = response.split("RETN=");
-            String[] codeArr = zongRes[1].split(",");
-            String code = codeArr[0];
-            log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
+                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
+                String[] zongRes = response.split("RETN=");
+                String[] codeArr = zongRes[1].split(",");
+                String code = codeArr[0];
+                log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
 
-            if (code.equalsIgnoreCase("0000")) {
-                res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
+                if (code.equalsIgnoreCase("0000")) {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
+                } else {
+                    res.setCorrelationId(request.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
+                }
             } else {
                 res.setCorrelationId(request.getCorrelationId());
-                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
+                res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
+                res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
             }
         }else {
             res.setCorrelationId(request.getCorrelationId());
-            res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
-            res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
+            res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+            res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
         }
         saveChargingRecords(res,request);
         return res;
