@@ -106,6 +106,7 @@ public class TelenorCharging {
                 chargeRequest(req);
             }
         } else {
+            logger.info("BILLING SERVICE || TELENOR CHARGING || MOCK REQUEST FOR || "+req.getMsisdn());
             res.setCorrelationId(req.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg("Subscribed SuccessFully");

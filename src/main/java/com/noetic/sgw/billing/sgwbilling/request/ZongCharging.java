@@ -73,6 +73,7 @@ public class ZongCharging {
                 res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
             }
         }else {
+            log.info("BILLING SERVICE || ZONG CHARGING || MOCK REQUEST FOR || "+request.getMsisdn());
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));

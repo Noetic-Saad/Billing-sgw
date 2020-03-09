@@ -212,6 +212,7 @@ public class JazzCharging {
                 res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
             }
         }else {
+            logger.info("BILLING SERVICE || JAZZ CHARGING || MOCK REQUEST FOR || "+request.getMsisdn());
             saveChargingRecords(res, request);
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
