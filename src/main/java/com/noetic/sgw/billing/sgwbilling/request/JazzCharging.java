@@ -80,7 +80,7 @@ public class JazzCharging {
             LocalDateTime now = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
             String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
-            int chargeAmount = 0;
+            double chargeAmount = 0;
             String subscriberNumber = "";
             boolean isAlreadyCharged = false;
             if (Long.toString(request.getMsisdn()).startsWith("92")) {
@@ -92,7 +92,8 @@ public class JazzCharging {
             } else {
                 subscriberNumber = Long.toString(request.getMsisdn());
             }
-            chargeAmount = (int) (request.getChargingAmount() + request.getTaxAmount());
+            System.out.println(request.getTaxAmount());
+            chargeAmount = (request.getChargingAmount() + request.getTaxAmount());
             System.out.println("Amount->" + request.getChargingAmount() + request.getTaxAmount());
             String inputXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
                     "<methodCall>\n" +
