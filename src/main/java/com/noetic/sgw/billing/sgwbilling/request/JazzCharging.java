@@ -153,10 +153,10 @@ public class JazzCharging {
             Date date1 = new Date();
             LocalDateTime localDateTime = LocalDateTime.ofInstant(date1.toInstant(), ZoneId.systemDefault());
             Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-            GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
+            /*GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
             if (successEntity != null) {
                 isAlreadyCharged = true;
-            }
+            }*/
             if (!isAlreadyCharged) {
                 try {
                     response = Unirest.post(env.getProperty("jazz.api"))
