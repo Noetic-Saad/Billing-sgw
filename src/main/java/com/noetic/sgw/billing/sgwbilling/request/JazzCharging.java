@@ -157,6 +157,10 @@ public class JazzCharging {
             if (successEntity != null) {
                 isAlreadyCharged = true;
             }*/
+
+            System.out.println(inputXML);
+
+            
             if (!isAlreadyCharged) {
                 try {
                     response = Unirest.post(env.getProperty("jazz.api"))
