@@ -160,7 +160,7 @@ public class JazzCharging {
 
             System.out.println(inputXML);
 
-            
+
             if (!isAlreadyCharged) {
                 try {
                     response = Unirest.post(env.getProperty("jazz.api"))
@@ -173,7 +173,7 @@ public class JazzCharging {
                             .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
                             .header("Connection", "keep-alive")
                             .body(inputXML).asString();
-                    System.out.println("Raw Response-->" + response);
+                    System.out.println("Raw Response-->" + response.getBody());
                     recArray = xmlConversion(response.getBody());
                     System.out.println(response.getStatus());
                 } catch (UnirestException e) {
