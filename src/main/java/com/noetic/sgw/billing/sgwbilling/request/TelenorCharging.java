@@ -78,6 +78,7 @@ public class TelenorCharging {
             subscriberNumber = Long.toString(req.getMsisdn());
         }
         chargeAmount = (int) (req.getChargingAmount() + req.getTaxAmount());
+        double chargeAmount_ = 23.9;
         LocalDateTime localDateTime = LocalDateTime.ofInstant(new Date().toInstant(), ZoneId.systemDefault());
         Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
         SuccessBilledRecordsEntity scuccessRecords = successBilledRecordsRepository.isAlreadyCharged(req.getMsisdn(), new Date(), toDate);
@@ -86,7 +87,7 @@ public class TelenorCharging {
                     .header("authorization", "Bearer " + accessToken)
                     .header("content-type", "application/json")
                     .header("cache-control", "no-cache")
-                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
+                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount_ + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
                     .asJson();
             logger.info("Charging Api Response " + response.getBody().toPrettyString());
             if (response.getStatus() == 200) {

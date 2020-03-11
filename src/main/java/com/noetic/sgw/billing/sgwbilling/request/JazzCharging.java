@@ -145,7 +145,7 @@ public class JazzCharging {
                     "</member>\n" +
                     "<member>\n" +
                     "<name>adjustmentAmountRelative</name>\n" +
-                    "<value><string>-" + chargeAmount + "</string></value>\n" +
+                    "<value><string>-598</string></value>\n" +
                     "</member>\n" +
                     "</struct>\n" +
                     "</value>\n" +
