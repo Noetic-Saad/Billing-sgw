@@ -160,6 +160,7 @@ public class TelenorCharging {
         entity.setChargingMechanism(req.getOperatorId().shortValue());
         entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
+        entity.setSubCycleId((short) req.getSubCycleId());
         if(req.getIsRenewal()==1){
             entity.setNoOfDailyAttempts(req.getDailyAttempts());
             entity.setNoAttemptsMonthly(req.getAttempts());

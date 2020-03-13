@@ -25,7 +25,7 @@ public class ZongCharging {
 
     private static final Logger log = LoggerFactory.getLogger(ZongCharging.class);
 
-    private static String SERVICE_ID_20 = "Noe20";
+    private static String SERVICE_ID_20 = "NOE20";
 
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
@@ -99,6 +99,7 @@ public class ZongCharging {
         entity.setChargingMechanism(req.getOperatorId().shortValue());
         entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
+        entity.setSubCycleId((short) req.getSubCycleId());
         if(req.getIsRenewal()==1){
             entity.setNoOfDailyAttempts(req.getDailyAttempts());
             entity.setNoAttemptsMonthly(req.getAttempts());

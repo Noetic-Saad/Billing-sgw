@@ -16,6 +16,7 @@ public class ChargeRequestProperties {
     private int attempts;
     private int isRenewal;
     private int dailyAttempts;
+    private int subCycleId;
 
     public Integer getOperatorId() {
         return operatorId;
@@ -112,4 +113,13 @@ public class ChargeRequestProperties {
     public void setDailyAttempts(int dailyAttempts) {
         this.dailyAttempts = dailyAttempts;
     }
+
+    public int getSubCycleId() {
+        return subCycleId;
+    }
+
+    public void setSubCycleId(int subCycleId) {
+        this.subCycleId = subCycleId;
+    }
+
 }

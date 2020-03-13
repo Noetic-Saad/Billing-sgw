@@ -22,6 +22,7 @@ public class GamesBillingRecordEntity {
     private Short chargingMechanism;
     private Long msisdn;
     private Integer isRenewal;
+    private Short subCycleId;
 
     @Id
     @Column(name = "id")
@@ -199,5 +200,15 @@ public class GamesBillingRecordEntity {
 
     public void setIsRenewal(Integer isRenewal) {
         this.isRenewal = isRenewal;
+    }
+
+    @Basic
+    @Column(name = "sub_cycle_id")
+    public Short getSubCycleId() {
+        return subCycleId;
+    }
+
+    public void setSubCycleId(Short subCycleId) {
+        this.subCycleId = subCycleId;
     }
 }
