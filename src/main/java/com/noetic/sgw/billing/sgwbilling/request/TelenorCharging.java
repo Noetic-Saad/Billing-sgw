@@ -22,6 +22,7 @@ import org.springframework.data.jpa.repository.query.InvalidJpaQueryMethodExcept
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -67,8 +68,6 @@ public class TelenorCharging {
     public Response chargeRequest(ChargeRequestProperties req) throws Exception {
         LocalDateTime now = LocalDateTime.now();
         Response res = new Response();
-        int chargeAmount = 0;
-        boolean isAlreadyCharged = false;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
         String subscriberNumber = "";
@@ -77,17 +76,16 @@ public class TelenorCharging {
         } else {
             subscriberNumber = Long.toString(req.getMsisdn());
         }
-        chargeAmount = (int) (req.getChargingAmount() + req.getTaxAmount());
-        double chargeAmount_ = 23.9;
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(new Date().toInstant(), ZoneId.systemDefault());
-        Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-        SuccessBilledRecordsEntity scuccessRecords = successBilledRecordsRepository.isAlreadyCharged(req.getMsisdn(), new Date(), toDate);
+        DecimalFormat decimalFormatter1 = new DecimalFormat("0.##");
+        DecimalFormat decimalFormatter = new DecimalFormat("#");
+        Double adjustmentAmount = Double.valueOf(decimalFormatter.format(req.getChargingAmount()))+Double.valueOf(decimalFormatter1.format(req.getTaxAmount()));
+        String chargeAmount = decimalFormatter1.format(adjustmentAmount);
         if (!testing) {
             HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
                     .header("authorization", "Bearer " + accessToken)
                     .header("content-type", "application/json")
                     .header("cache-control", "no-cache")
-                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount_ + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
+                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
                     .asJson();
             logger.info("Charging Api Response " + response.getBody().toPrettyString());
             if (response.getStatus() == 200) {
@@ -145,7 +143,7 @@ public class TelenorCharging {
 
     private void saveChargingRecords(Response res, ChargeRequestProperties req) {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
-        entity.setAmount(req.getChargingAmount());
+       // entity.setAmount(req.getChargingAmount());
         entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
         if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
             entity.setIsCharged(1);
@@ -158,7 +156,7 @@ public class TelenorCharging {
         entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
         entity.setChargingMechanism(req.getOperatorId().shortValue());
-        entity.setTaxAmount(req.getTaxAmount());
+        //entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
         entity.setSubCycleId((short) req.getSubCycleId());
         if(req.getIsRenewal()==1){
@@ -180,5 +178,4 @@ public class TelenorCharging {
         }
 
     }
-
 }

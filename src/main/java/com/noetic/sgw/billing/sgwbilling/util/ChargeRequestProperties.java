@@ -9,9 +9,9 @@ public class ChargeRequestProperties {
     private Integer vendorPlanId;
     private String correlationId;
     private Date originDateTime;
-    private double chargingAmount;
+    private Double chargingAmount;
     private String shortcode;
-    private double taxAmount;
+    private Double taxAmount;
     private double shareAmount;
     private int attempts;
     private int isRenewal;
@@ -86,7 +86,7 @@ public class ChargeRequestProperties {
         return taxAmount;
     }
 
-    public void setTaxAmount(double taxAmount) {
+    public void setTaxAmount(Double taxAmount) {
         this.taxAmount = taxAmount;
     }
 

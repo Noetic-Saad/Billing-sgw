@@ -34,6 +34,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -80,7 +81,7 @@ public class JazzCharging {
             LocalDateTime now = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
             String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
-            int chargeAmount = 0;
+            String chargeAmount = "";
             String subscriberNumber = "";
             boolean isAlreadyCharged = false;
             if (Long.toString(request.getMsisdn()).startsWith("92")) {
@@ -92,10 +93,10 @@ public class JazzCharging {
             } else {
                 subscriberNumber = Long.toString(request.getMsisdn());
             }
-            System.out.println(request.getTaxAmount());
-            double amount = (request.getChargingAmount() + request.getTaxAmount());
-            chargeAmount = (int) amount*100;
-            System.out.println("Amount->" + request.getChargingAmount() + request.getTaxAmount());
+            DecimalFormat decimalFormatter1 = new DecimalFormat("0.##");
+            DecimalFormat decimalFormatter = new DecimalFormat("#");
+            Double adjustmentAmount = Double.valueOf(decimalFormatter.format(request.getChargingAmount()))+Double.valueOf(decimalFormatter1.format(request.getTaxAmount()));
+            chargeAmount = decimalFormatter.format(adjustmentAmount*100);
             String inputXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
                     "<methodCall>\n" +
                     "<methodName>" + this.methodName + "</methodName>\n" +
@@ -145,23 +146,13 @@ public class JazzCharging {
                     "</member>\n" +
                     "<member>\n" +
                     "<name>adjustmentAmountRelative</name>\n" +
-                    "<value><string>-598</string></value>\n" +
+                    "<value><string>-"+chargeAmount+"</string></value>\n" +
                     "</member>\n" +
                     "</struct>\n" +
                     "</value>\n" +
                     "</param>\n" +
                     "</params>\n" +
                     "</methodCall>";
-            Date date1 = new Date();
-            LocalDateTime localDateTime = LocalDateTime.ofInstant(date1.toInstant(), ZoneId.systemDefault());
-            Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-            /*GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
-            if (successEntity != null) {
-                isAlreadyCharged = true;
-            }*/
-
-            System.out.println(inputXML);
-
 
             if (!isAlreadyCharged) {
                 try {
@@ -230,7 +221,7 @@ public class JazzCharging {
 
     private void saveChargingRecords(Response res, ChargeRequestProperties req) {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
-        entity.setAmount(req.getChargingAmount());
+       // entity.setAmount(req.getChargingAmount());
         entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
         if(res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL){
             entity.setIsCharged(1);
@@ -243,7 +234,7 @@ public class JazzCharging {
         entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
         entity.setChargingMechanism(req.getOperatorId().shortValue());
-        entity.setTaxAmount(req.getTaxAmount());
+        //entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
         entity.setSubCycleId((short) req.getSubCycleId());
         if(req.getIsRenewal()==1){
@@ -346,4 +337,5 @@ public class JazzCharging {
         }
         return retArray;
     }
+
 }
