@@ -52,7 +52,7 @@ public class JazzCharging {
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
     @Autowired StartConfiguration startConfiguration;
-    private boolean isTestingFlagOff = false;
+    private boolean isTestingFlagOff = true;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
     private String originNodeType = "EXT";
@@ -166,18 +166,16 @@ public class JazzCharging {
                             .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
                             .header("Connection", "keep-alive")
                             .body(inputXML).asString();
-                    System.out.println("Raw Response-->" + response.getBody());
                     recArray = xmlConversion(response.getBody());
                     System.out.println(response.getStatus());
                 } catch (UnirestException e) {
                     logger.info("Response +" + response);
                     logger.error("Error while sending request " + e.getStackTrace());
                 }
-                String transID = recArray[0]; // TransactionID
-                System.out.println("Transaction Id-->" + transID);
+                String transID = recArray[0];
                 if (recArray[1] != null) {
                     responseCode = Integer.valueOf(recArray[1]);
-                    // ResponseCode
+                    logger.info("BILLING SERVICE || JAZZ CHARGING || JAZZ RESPONSE FOR || "+request.getMsisdn()+" || "+responseCode);
                 }
                 if (response == null) {
                     res.setCorrelationId(request.getCorrelationId());
@@ -250,9 +248,9 @@ public class JazzCharging {
         entity.setTransactionId(transactionId);
         try {
             gamesBillingRecordsRepository.save(entity);
-            logger.info("CHARGING | JAZZCHARGING CLASS | RECORDS INSERTED FOR MSISDN "+req.getMsisdn());
+            logger.info("BILLING SERVICE || JAZZ CHARGING || RECORDS INSERTED FOR MSISDN "+req.getMsisdn());
         } catch (InvalidJpaQueryMethodException e) {
-            logger.info("CHARGING | JAZZCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS "+e.getCause());
+            logger.info("BILLING SERVICE || JAZZ CHARGING || EXCEPTION CAUGHT WHILE INSERTING RECORDS "+e.getCause());
         }
     }
 
@@ -325,8 +323,8 @@ public class JazzCharging {
                 } //End Response Code IF
             }
         } catch (SAXParseException err) {
-            logger.info("CHARGING | JAZZCHARGING CLASS | ** Parsing error" + ", line " + err.getLineNumber() + ", uri " + err.getSystemId());
-            logger.info("CHARGING | JAZZCHARGING CLASS | SAXEXCEPTION | " + err.getMessage());
+            logger.info("BILLING SERVICE || JAZZ CHARGING || ** Parsing error" + ", line " + err.getLineNumber() + ", uri " + err.getSystemId());
+            logger.info("BILLING SERVICE || JAZZ CHARGING || SAXEXCEPTION | " + err.getMessage());
 
         } catch (SAXException e) {
             Exception x = e.getException();
