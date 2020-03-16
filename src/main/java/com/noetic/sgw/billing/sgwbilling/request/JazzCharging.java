@@ -52,7 +52,7 @@ public class JazzCharging {
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
     @Autowired StartConfiguration startConfiguration;
-    private boolean isTestingFlagOff = true;
+    private boolean isTestingFlagOff = false;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
     private String originNodeType = "EXT";
