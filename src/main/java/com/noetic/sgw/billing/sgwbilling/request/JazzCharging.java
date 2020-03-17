@@ -97,6 +97,7 @@ public class JazzCharging {
             DecimalFormat decimalFormatter = new DecimalFormat("#");
             Double adjustmentAmount = Double.valueOf(decimalFormatter.format(request.getChargingAmount()))+Double.valueOf(decimalFormatter1.format(request.getTaxAmount()));
             chargeAmount = decimalFormatter.format(adjustmentAmount*100);
+            logger.info("BILLING SERVICE || JAZZ CHARGING || TOTAL AMOUNT || "+ chargeAmount);
             String inputXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n" +
                     "<methodCall>\n" +
                     "<methodName>" + this.methodName + "</methodName>\n" +
