@@ -30,7 +30,7 @@ public class ZongCharging {
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private boolean testing = true;
+    private boolean testing = false;
     @Autowired
     private StartConfiguration startConfiguration;
     @Autowired
@@ -84,7 +84,7 @@ public class ZongCharging {
 
     private void saveChargingRecords(Response res, ChargeRequestProperties req) {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
-      //  entity.setAmount(req.getChargingAmount());
+        entity.setAmount(req.getChargingAmount());
         entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
         if(res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL){
             entity.setIsCharged(1);
@@ -97,7 +97,7 @@ public class ZongCharging {
         entity.setShareAmount(req.getShareAmount());
         entity.setMsisdn(req.getMsisdn());
         entity.setChargingMechanism(req.getOperatorId().shortValue());
-       // entity.setTaxAmount(req.getTaxAmount());
+        entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
         entity.setSubCycleId((short) req.getSubCycleId());
         if(req.getIsRenewal()==1){
