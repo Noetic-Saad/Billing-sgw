@@ -71,6 +71,7 @@ public class JazzCharging {
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public Response jazzChargeRequest(ChargeRequestProperties request) {
+        String transID ="";
         Response res = new Response();
         if(isTestingFlagOff) {
             Date date = new Date(System.currentTimeMillis());
@@ -173,7 +174,7 @@ public class JazzCharging {
                     logger.info("Response +" + response);
                     logger.error("Error while sending request " + e.getStackTrace());
                 }
-                String transID = recArray[0];
+                transID = recArray[0];
                 if (recArray[1] != null) {
                     responseCode = Integer.valueOf(recArray[1]);
                     logger.info("BILLING SERVICE || JAZZ CHARGING || JAZZ RESPONSE FOR || "+request.getMsisdn()+" || "+responseCode);
@@ -209,16 +210,16 @@ public class JazzCharging {
             }
         }else {
             logger.info("BILLING SERVICE || JAZZ CHARGING || MOCK REQUEST FOR || "+request.getMsisdn());
-            saveChargingRecords(res, request);
+            saveChargingRecords(res, request,transID);
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
         }
-        saveChargingRecords(res, request);
+        saveChargingRecords(res, request,transID);
         return res;
     }
 
-    private void saveChargingRecords(Response res, ChargeRequestProperties req) {
+    private void saveChargingRecords(Response res, ChargeRequestProperties req,String transactionId) {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
         entity.setAmount(req.getChargingAmount());
         entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
@@ -245,7 +246,6 @@ public class JazzCharging {
             entity.setNoOfDailyAttempts(1);
             entity.setIsRenewal(0);
         }
-        String transactionId = Base64.getEncoder().encodeToString((LocalDateTime.now().format(formatter) + UUID.randomUUID().toString()).getBytes());
         entity.setTransactionId(transactionId);
         try {
             gamesBillingRecordsRepository.save(entity);

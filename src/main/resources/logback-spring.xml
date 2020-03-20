@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="LOGS" value="/var/log/subscription-gateway/billing-service" />
+    <property name="LOGS" value="./var/log/subscription-gateway/billing-service"/>
 
     <appender name="Console"
               class="ch.qos.logback.core.ConsoleAppender">
@@ -30,19 +30,19 @@
     </appender>
 
     <!-- LOG everything at INFO level -->
-    <root level="info">
-        <appender-ref ref="Console" />
+    <root level="info">c
+        <appender-ref ref="Console"/>
     </root>
 
     <!-- LOG "com.baeldung*" at TRACE level -->
-    <logger name="com.noeticworld.sgw" level="trace" additivity="false">
-        <appender-ref ref="RollingFile" />
-        <appender-ref ref="Console" />
+    <logger name="com.noetic.sgw.billing.sgwbilling" level="trace" additivity="false">
+        <appender-ref ref="RollingFile"/>
+        <appender-ref ref="Console"/>
     </logger>
 
-    <logger name="com.noeticworld.sgw" level="info" additivity="false">
-        <appender-ref ref="RollingFile" />
-        <appender-ref ref="Console" />
+    <logger name="com.noetic.sgw.billing.sgwbilling" level="info" additivity="false">
+        <appender-ref ref="RollingFile"/>
+        <appender-ref ref="Console"/>
     </logger>
 
 
