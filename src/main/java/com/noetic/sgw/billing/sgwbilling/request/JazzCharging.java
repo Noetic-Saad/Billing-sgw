@@ -5,9 +5,11 @@ import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.SuccessBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.TodaysChargedMsisdnsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.FailedRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.GamesBillingRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.SuccessBilledRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.repository.TodaysChargedMsisdnsRepository;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.Response;
 import com.noetic.sgw.billing.sgwbilling.util.ResponseTypeConstants;
@@ -52,6 +54,7 @@ public class JazzCharging {
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
     @Autowired StartConfiguration startConfiguration;
+    @Autowired TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
     private boolean isTestingFlagOff = true;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
@@ -253,6 +256,42 @@ public class JazzCharging {
         } catch (InvalidJpaQueryMethodException e) {
             logger.info("BILLING SERVICE || JAZZ CHARGING || EXCEPTION CAUGHT WHILE INSERTING RECORDS "+e.getCause());
         }
+        if(req.getIsRenewal()==1){
+            logger.info("BILLING SERVICE || JAZZ CHARGING || UPDATING TODAYS CHARGED TABLE");
+            updateTodaysChargedTable(res,req);
+        }
+    }
+
+    private void updateTodaysChargedTable(Response res, ChargeRequestProperties req) {
+        TodaysChargedMsisdnsEntity chargedMsisdnsEntity = chargedMsisdnsRepository.findTopByMsisdn(req.getMsisdn());
+        TodaysChargedMsisdnsEntity todaysChargedMsisdnsEntity = new TodaysChargedMsisdnsEntity();
+        if (chargedMsisdnsEntity == null) {
+            todaysChargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
+            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+                logger.info("BILLING SERVICE || JAZZ CHARGING || " + req.getMsisdn() + " | RENEWED SUCCESSFULLY");
+                todaysChargedMsisdnsEntity.setIsCharged(1);
+            } else {
+                logger.info("BILLING SERVICE || JAZZ CHARGING || " + req.getMsisdn() + " | NOT RENEWED SUCCESSFULLY");
+                todaysChargedMsisdnsEntity.setIsCharged(0);
+            }
+            todaysChargedMsisdnsEntity.setNumberOfTries(1);
+            todaysChargedMsisdnsEntity.setExpirydatetime(Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
+            todaysChargedMsisdnsEntity.setSubCycle(req.getSubCycleId());
+            todaysChargedMsisdnsEntity.setMsisdn(req.getMsisdn());
+            todaysChargedMsisdnsEntity.setVendorPlanId(req.getVendorPlanId().longValue());
+            todaysChargedMsisdnsEntity.setOperatorId(req.getOperatorId());
+            chargedMsisdnsRepository.save(todaysChargedMsisdnsEntity);
+        } else {
+            chargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
+            chargedMsisdnsEntity.setNumberOfTries(chargedMsisdnsEntity.getNumberOfTries() + 1);
+            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+                chargedMsisdnsEntity.setIsCharged(1);
+            } else {
+                chargedMsisdnsEntity.setIsCharged(0);
+            }
+            chargedMsisdnsRepository.save(chargedMsisdnsEntity);
+        }
+
     }
 
     protected
@@ -336,5 +375,6 @@ public class JazzCharging {
         }
         return retArray;
     }
+
 
 }
