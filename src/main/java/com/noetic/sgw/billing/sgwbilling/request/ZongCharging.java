@@ -2,7 +2,9 @@ package com.noetic.sgw.billing.sgwbilling.request;
 
 import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.WeeklyChargedMsisdnsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.GamesBillingRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.repository.WeeklyChargedMsisdnsRepository;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.Response;
 import com.noetic.sgw.billing.sgwbilling.util.ResponseTypeConstants;
@@ -35,6 +37,8 @@ public class ZongCharging {
     private StartConfiguration startConfiguration;
     @Autowired
     private GamesBillingRecordsRepository gamesBillingRecordsRepository;
+    @Autowired
+    private WeeklyChargedMsisdnsRepository weeklyChargedMsisdnsRepository;
 
     public Response sendChargingRequest(ChargeRequestProperties request){
         String charginAmount = "";
@@ -117,6 +121,42 @@ public class ZongCharging {
         } catch (InvalidJpaQueryMethodException e) {
             log.info("CHARGING | ZONGCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS "+e.getCause());
         }
+        if(req.getIsRenewal()==1){
+            log.info("BILLING SERVICE || ZONG CHARGING || UPDATING TODAYS CHARGED TABLE");
+            updateWeeklyChargedTable(res,req);
+        }
+    }
+
+    private void updateWeeklyChargedTable(Response res, ChargeRequestProperties req) {
+        WeeklyChargedMsisdnsEntity chargedMsisdnsEntity = weeklyChargedMsisdnsRepository.findTopByMsisdn(req.getMsisdn());
+        WeeklyChargedMsisdnsEntity todaysChargedMsisdnsEntity = new WeeklyChargedMsisdnsEntity();
+        if (chargedMsisdnsEntity == null) {
+            todaysChargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
+            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+                log.info("BILLING SERVICE || ZONG CHARGING || " + req.getMsisdn() + " | RENEWED SUCCESSFULLY");
+                todaysChargedMsisdnsEntity.setIsCharged(1);
+            } else {
+                log.info("BILLING SERVICE || ZONG CHARGING || " + req.getMsisdn() + " | NOT RENEWED SUCCESSFULLY");
+                todaysChargedMsisdnsEntity.setIsCharged(0);
+            }
+            todaysChargedMsisdnsEntity.setNumberOfTries(1);
+            todaysChargedMsisdnsEntity.setExpirydatetime(Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
+            todaysChargedMsisdnsEntity.setSubCycle(req.getSubCycleId());
+            todaysChargedMsisdnsEntity.setMsisdn(req.getMsisdn());
+            todaysChargedMsisdnsEntity.setVendorPlanId(req.getVendorPlanId().longValue());
+            todaysChargedMsisdnsEntity.setOperatorId(req.getOperatorId());
+            weeklyChargedMsisdnsRepository.save(todaysChargedMsisdnsEntity);
+        } else {
+            chargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
+            chargedMsisdnsEntity.setNumberOfTries(chargedMsisdnsEntity.getNumberOfTries() + 1);
+            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+                chargedMsisdnsEntity.setIsCharged(1);
+            } else {
+                chargedMsisdnsEntity.setIsCharged(0);
+            }
+            weeklyChargedMsisdnsRepository.save(chargedMsisdnsEntity);
+        }
+
     }
 
 }
