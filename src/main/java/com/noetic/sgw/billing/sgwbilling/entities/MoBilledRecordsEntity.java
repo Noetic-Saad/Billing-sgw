@@ -22,6 +22,8 @@ public class MoBilledRecordsEntity {
 
     @Id
     @Column(name = "id")
+    @SequenceGenerator(name = "mo_billed_record_id_seq",sequenceName = "mo_billed_record_id_seq",allocationSize=1, initialValue=1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "mo_billed_record_id_seq")
     public int getId() {
         return id;
     }
