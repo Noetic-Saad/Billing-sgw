@@ -27,7 +27,7 @@ public class ZongCharging {
 
     private static final Logger log = LoggerFactory.getLogger(ZongCharging.class);
 
-    private static String SERVICE_ID_20 = "NOE20";
+    private static String SERVICE_ID_20 = "Noet20";
 
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
