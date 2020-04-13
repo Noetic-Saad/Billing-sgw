@@ -2,8 +2,10 @@ package com.noetic.sgw.billing.sgwbilling.request;
 
 import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.TodaysChargedMsisdnsEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.WeeklyChargedMsisdnsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.GamesBillingRecordsRepository;
+import com.noetic.sgw.billing.sgwbilling.repository.TodaysChargedMsisdnsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.WeeklyChargedMsisdnsRepository;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.Response;
@@ -39,6 +41,7 @@ public class ZongCharging {
     private GamesBillingRecordsRepository gamesBillingRecordsRepository;
     @Autowired
     private WeeklyChargedMsisdnsRepository weeklyChargedMsisdnsRepository;
+    @Autowired TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
 
     public Response sendChargingRequest(ChargeRequestProperties request){
         String charginAmount = "";
@@ -124,6 +127,7 @@ public class ZongCharging {
         if(req.getIsRenewal()==1){
             log.info("BILLING SERVICE || ZONG CHARGING || UPDATING TODAYS CHARGED TABLE");
             updateWeeklyChargedTable(res,req);
+            updateTodaysChargedTable(res,req);
         }
     }
 
@@ -155,6 +159,37 @@ public class ZongCharging {
                 chargedMsisdnsEntity.setIsCharged(0);
             }
             weeklyChargedMsisdnsRepository.save(chargedMsisdnsEntity);
+        }
+
+    }
+    private void updateTodaysChargedTable(Response res, ChargeRequestProperties req) {
+        TodaysChargedMsisdnsEntity chargedMsisdnsEntity = chargedMsisdnsRepository.findTopByMsisdn(req.getMsisdn());
+        TodaysChargedMsisdnsEntity todaysChargedMsisdnsEntity = new TodaysChargedMsisdnsEntity();
+        if (chargedMsisdnsEntity == null) {
+            todaysChargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
+            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+                log.info("BILLING SERVICE || ZONG CHARGING || " + req.getMsisdn() + " | RENEWED SUCCESSFULLY");
+                todaysChargedMsisdnsEntity.setIsCharged(1);
+            } else {
+                log.info("BILLING SERVICE || ZONG CHARGING || " + req.getMsisdn() + " | NOT RENEWED SUCCESSFULLY");
+                todaysChargedMsisdnsEntity.setIsCharged(0);
+            }
+            todaysChargedMsisdnsEntity.setNumberOfTries(1);
+            todaysChargedMsisdnsEntity.setExpirydatetime(Timestamp.valueOf(LocalDateTime.now().plusDays(1)));
+            todaysChargedMsisdnsEntity.setSubCycle(req.getSubCycleId());
+            todaysChargedMsisdnsEntity.setMsisdn(req.getMsisdn());
+            todaysChargedMsisdnsEntity.setVendorPlanId(req.getVendorPlanId().longValue());
+            todaysChargedMsisdnsEntity.setOperatorId(req.getOperatorId());
+            chargedMsisdnsRepository.save(todaysChargedMsisdnsEntity);
+        } else {
+            chargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
+            chargedMsisdnsEntity.setNumberOfTries(chargedMsisdnsEntity.getNumberOfTries() + 1);
+            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+                chargedMsisdnsEntity.setIsCharged(1);
+            } else {
+                chargedMsisdnsEntity.setIsCharged(0);
+            }
+            chargedMsisdnsRepository.save(chargedMsisdnsEntity);
         }
 
     }
