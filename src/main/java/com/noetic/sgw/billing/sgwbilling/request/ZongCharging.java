@@ -34,7 +34,7 @@ public class ZongCharging {
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private boolean testing = true;
+    private boolean testing = false;
     @Autowired
     private StartConfiguration startConfiguration;
     @Autowired
@@ -58,7 +58,11 @@ public class ZongCharging {
                 zongMMLRequest.logIn();
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
-
+                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
+                if(response == null){
+                    zongMMLRequest.logIn();
+                    response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
+                }
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
                 String[] zongRes = response.split("RETN=");
                 String[] codeArr = zongRes[1].split(",");

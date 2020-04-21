@@ -29,18 +29,15 @@ public class ZongMMLRequest {
             stream = client.GetStream();
             stream.write(data, 0, data.length);
             output = "Sent: " + message;
-            log.info("Sent : " + output);
 
             data = new byte[10240];
             String responseData = null;
 
             InputStream stream_in = client.Read();
             int bytes = stream_in.read(data, 0, data.length);
-            log.info("RAW RESPONSE || " + String.valueOf(bytes));
             responseData = new String(data, "US-ASCII");
             output = "Received:  " + responseData;
 
-            log.info("Received : " + output);
         } catch (Throwable e) {
             output = "ArgumentNullException" + e;
         }
@@ -54,17 +51,12 @@ public class ZongMMLRequest {
         String loginbody = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER="+userid+",PSWD="+password+";";
         String login = loginbody;
 
-
-        log.info(login);
-
         serverConnection();
         String CKsumLogin = chksum(login);
 
-        log.info("CKsumLogin  : " + CKsumLogin);
         String logincommand = null;
         try {
             logincommand = connect(login + CKsumLogin, "N");
-            System.out.println(logincommand);
         } catch (SocketException e) {
             e.printStackTrace();
         }

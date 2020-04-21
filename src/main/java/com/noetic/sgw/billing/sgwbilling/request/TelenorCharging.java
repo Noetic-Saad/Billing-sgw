@@ -44,7 +44,7 @@ public class TelenorCharging {
     @Autowired
     FailedRecordsRepository failedRecordsRepository;
     private String accessToken = "";
-    private boolean testing = true;
+    private boolean testing = false;
     @Autowired
     private GamesBillingRecordsRepository gamesBillingRecordsRepository;
     @Autowired
