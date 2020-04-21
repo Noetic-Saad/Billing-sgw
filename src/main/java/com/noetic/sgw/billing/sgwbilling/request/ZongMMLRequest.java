@@ -56,10 +56,12 @@ public class ZongMMLRequest {
 
         String logincommand = null;
         try {
+            log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN REQUEST | "+login + CKsumLogin);
             logincommand = connect(login + CKsumLogin, "N");
         } catch (SocketException e) {
             e.printStackTrace();
         }
+        log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN RESPONSE | "+logincommand);
         return logincommand;
     }
 
@@ -96,7 +98,9 @@ public class ZongMMLRequest {
         String headerAndBody = header + requestBody;
         String chksum = chksum(headerAndBody);
         String deductBalCommand = null;
+
         try {
+            log.info("CHARGING | ZONGMMLREQUEST CLASS | SENT | "+headerAndBody+chksum);
             deductBalCommand = connect(headerAndBody+chksum, "N");
         } catch (SocketException e) {
             // TODO Auto-generated catch block
