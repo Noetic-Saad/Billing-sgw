@@ -9,11 +9,15 @@ public class ChargeRequestProperties {
     private Integer vendorPlanId;
     private String correlationId;
     private Date originDateTime;
-    private double chargingAmount;
+    private Double chargingAmount;
     private String shortcode;
-    private double taxAmount;
+    private Double taxAmount;
     private double shareAmount;
     private int attempts;
+    private int isRenewal;
+    private int dailyAttempts;
+    private int subCycleId;
+    private boolean isDcb;
 
     public Integer getOperatorId() {
         return operatorId;
@@ -83,7 +87,7 @@ public class ChargeRequestProperties {
         return taxAmount;
     }
 
-    public void setTaxAmount(double taxAmount) {
+    public void setTaxAmount(Double taxAmount) {
         this.taxAmount = taxAmount;
     }
 
@@ -93,5 +97,41 @@ public class ChargeRequestProperties {
 
     public void setAttempts(int attempts) {
         this.attempts = attempts;
+    }
+
+    public int getIsRenewal() {
+        return isRenewal;
+    }
+
+    public void setIsRenewal(int isRenewal) {
+        this.isRenewal = isRenewal;
+    }
+
+    public int getDailyAttempts() {
+        return dailyAttempts;
+    }
+
+    public void setDailyAttempts(int dailyAttempts) {
+        this.dailyAttempts = dailyAttempts;
+    }
+
+    public int getSubCycleId() {
+        return subCycleId;
+    }
+
+    public void setSubCycleId(int subCycleId) {
+        this.subCycleId = subCycleId;
+    }
+
+    public void setChargingAmount(Double chargingAmount) {
+        this.chargingAmount = chargingAmount;
+    }
+
+    public boolean isDcb() {
+        return isDcb;
+    }
+
+    public void setDcb(boolean dcb) {
+        isDcb = dcb;
     }
 }

@@ -2,9 +2,7 @@ package com.noetic.sgw.billing.sgwbilling.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
-import com.noetic.sgw.billing.sgwbilling.request.JazzCharging;
-import com.noetic.sgw.billing.sgwbilling.request.TelenorCharging;
-import com.noetic.sgw.billing.sgwbilling.request.UcipRequest;
+import com.noetic.sgw.billing.sgwbilling.request.*;
 import com.noetic.sgw.billing.sgwbilling.util.ChargeRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.MoRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.MoResponse;
@@ -27,6 +25,10 @@ class ChargingService {
     StartConfiguration startConfiguration;
     @Autowired
     UcipRequest ucipRequest;
+    @Autowired
+    ZongCharging zongCharging;
+    @Autowired
+    ZongMoCharging zongMoCharging;
 
 
     Response response = null;
@@ -47,7 +49,7 @@ class ChargingService {
         this.telenorCharging = telenorCharging;
     }
 
-    public Response processRequest(ChargeRequestProperties req) throws JsonProcessingException {
+    public Response processRequest(ChargeRequestProperties req) throws Exception {
         operator_id = req.getOperatorId();
         if (operator_id == startConfiguration.getTelenor()) {
             response = telenorCharging.chargeRequest(req);
@@ -56,23 +58,22 @@ class ChargingService {
         } else if (operator_id == startConfiguration.getWarid()) {
 
         } else if (operator_id == startConfiguration.getZong()) {
-
+            response = zongCharging.sendChargingRequest(req);
         } else {
 
         }
         return response;
     }
 
-    public MoResponse processMoChargeRequest(MoRequestProperties req) {
+    public MoResponse processMoChargeRequest(MoRequestProperties req) throws InterruptedException {
 
-        if (req.getOperatorId() == startConfiguration.getJazz()) {
+        if (req.getOperatorId() == startConfiguration.getJazz() ||
+                req.getOperatorId() == startConfiguration.getWarid()) {
             moResponse = processJazz(req);
-        } else if (req.getOperatorId() == startConfiguration.getWarid()) {
-
         } else if (req.getOperatorId() == startConfiguration.getUfone()) {
 
         } else if (req.getOperatorId() == startConfiguration.getZong()) {
-
+            zongMoCharging.sendChargingRequest(req);
         } else {
 
         }
@@ -80,7 +81,7 @@ class ChargingService {
         return moResponse;
     }
 
-    private MoResponse processJazz(MoRequestProperties req) {
+    private MoResponse processJazz(MoRequestProperties req) throws InterruptedException {
 
         switch (jazzSegregationMechanism) {
             case 1:

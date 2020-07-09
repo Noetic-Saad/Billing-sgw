@@ -1,9 +1,9 @@
 package com.noetic.sgw.billing.sgwbilling.repository;
 
-import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.entities.ResponseTypeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FailedRecordsRepository extends JpaRepository<FailedBilledRecordsEntity,Integer> {
+public interface ResponseTypeRepository extends JpaRepository<ResponseTypeEntity,Integer> {
 }

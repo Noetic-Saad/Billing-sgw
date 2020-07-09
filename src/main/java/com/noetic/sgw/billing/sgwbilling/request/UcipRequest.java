@@ -1,12 +1,9 @@
 package com.noetic.sgw.billing.sgwbilling.request;
 
-import com.noetic.sgw.billing.sgwbilling.entities.MoFailedBilledRecordsEntity;
-import com.noetic.sgw.billing.sgwbilling.entities.MoSuccessBilledRecordsEntity;
-import com.noetic.sgw.billing.sgwbilling.repository.MoFailedRecordsRepository;
-import com.noetic.sgw.billing.sgwbilling.repository.MoSuccessBilledRepository;
+import com.noetic.sgw.billing.sgwbilling.entities.MoBilledRecordsEntity;
+import com.noetic.sgw.billing.sgwbilling.repository.MoBilledRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.util.MoRequestProperties;
 import com.noetic.sgw.billing.sgwbilling.util.MoResponse;
-import com.noetic.sgw.billing.sgwbilling.util.Response;
 import com.noetic.sgw.billing.sgwbilling.util.ResponseTypeConstants;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
@@ -15,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.springframework.data.jpa.repository.query.InvalidJpaQueryMethodException;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -46,9 +42,7 @@ public class UcipRequest {
     @Autowired
     private Environment env;
     @Autowired
-    private MoSuccessBilledRepository moSuccessBilledRepository;
-    @Autowired
-    private MoFailedRecordsRepository moFailedRecordsRepository;
+    private MoBilledRecordsRepository moBilledRecordsRepository;
 
 
     private String methodName = "UpdateBalanceAndDate";
@@ -66,7 +60,7 @@ public class UcipRequest {
     HttpResponse<String> response;
     private boolean isTestingFlagOff = false;
 
-    public MoResponse ucipRequest(MoRequestProperties request) {
+    public MoResponse ucipRequest(MoRequestProperties request) throws InterruptedException {
         MoResponse res = new MoResponse();
         Date date = new Date(System.currentTimeMillis());
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
@@ -168,8 +162,7 @@ public class UcipRequest {
                 logger.info("Response +" + response);
                 logger.error("Error while sending request " + e.getStackTrace());
             }
-            String transID = recArray[0]; // TransactionID
-            System.out.println("Transaction Id-->" + transID);
+            String transID = recArray[0];
             if (recArray[1] != null) {
                 responseCode = Integer.valueOf(recArray[1]);
                 // ResponseCode
@@ -199,14 +192,10 @@ public class UcipRequest {
             if (status != null)
                 logger.info("RESPONSE MESSAGE: " + res.getMsg());
 
-            if (responseCode == 0) {
-                saveSuccessRecords(res, request);
-            } else {
-                logger.info("Tyring to insert In Failed Record Table");
-                saveFailedRecords(res, request);
-            }
+            saveChargingRecords(res,request,transactionID);
         }else {
-            saveSuccessRecords(res, request);
+            Thread.sleep(100l);
+            saveChargingRecords(res,request,transactionID);
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg("Subscribed SuccessFully");
@@ -216,45 +205,33 @@ public class UcipRequest {
         return res;
     }
 
-    private void saveSuccessRecords(MoResponse res, MoRequestProperties req) {
-        System.out.println("Control Came Here");
-        MoSuccessBilledRecordsEntity entity = new MoSuccessBilledRecordsEntity();
-        entity.setPartnerPlanId((int) req.getPartnerPlanId());
-        entity.setOperatorId((int) req.getOperatorId());
-        entity.setChargingMechanism(req.getChargingMechanism());
-        entity.setChargedAmount(req.getChargingAmount());
-        entity.setTaxAmount(req.getTaxAmount());
-        entity.setMsisdn(req.getMsisdn());
-        entity.setChargeTime(new Timestamp(req.getOriginDateTime().getTime()));
-        try {
-            moSuccessBilledRepository.save(entity);
-            logger.info("Records For Success Billing Inserted Successfull");
-        } catch (InvalidJpaQueryMethodException e) {
-            logger.error("Jpa Exception Caught Here: " + e.getCause());
+    private void saveChargingRecords(MoResponse moResponse, MoRequestProperties requestProperties,String transactionId){
 
+        MoBilledRecordsEntity moBilledRecordsEntity = new MoBilledRecordsEntity();
+        moBilledRecordsEntity.setMsisdn(requestProperties.getMsisdn());
+        moBilledRecordsEntity.setOperatorId((int) requestProperties.getOperatorId());
+        moBilledRecordsEntity.setChargingMechanism(requestProperties.getChargingMechanism());
+        moBilledRecordsEntity.setOriginalSmsId(333l);
+        moBilledRecordsEntity.setPartnerPlanId((int) requestProperties.getPartnerPlanId());
+        moBilledRecordsEntity.setChargedAmount(requestProperties.getChargingAmount());
+        moBilledRecordsEntity.setTaxAmount(requestProperties.getTaxAmount());
+        moBilledRecordsEntity.setChargeTime(Timestamp.valueOf(LocalDateTime.now()));
+        moBilledRecordsEntity.setTransactionId(transactionId);
+        if(moResponse.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL){
+            moBilledRecordsEntity.setIsCharged(1);
+            moBilledRecordsEntity.setChargingResponse("CHARGED SUCCESSFULLY");
+        }else if(moResponse.getCode() == ResponseTypeConstants.INSUFFICIENT_BALANCE){
+            moBilledRecordsEntity.setIsCharged(0);
+            moBilledRecordsEntity.setChargingResponse("INSUFFICIENT BALANCE");
+        }else if(moResponse.getCode() == ResponseTypeConstants.SUBSCRIBER_NOT_FOUND){
+            moBilledRecordsEntity.setIsCharged(0);
+            moBilledRecordsEntity.setChargingResponse("SUBSCRIBER NOT FOUNT");
+        }else {
+            moBilledRecordsEntity.setIsCharged(0);
+            moBilledRecordsEntity.setChargingResponse("OTHER ERROR");
         }
-    }
+        moBilledRecordsRepository.save(moBilledRecordsEntity);
 
-    private void saveFailedRecords(MoResponse res, MoRequestProperties req) {
-        MoFailedBilledRecordsEntity entity = new MoFailedBilledRecordsEntity();
-        entity.setPartnerPlanId((int) req.getPartnerPlanId());
-        entity.setOperatorId((int) req.getOperatorId());
-        entity.setChargingMechanism(req.getChargingMechanism());
-        entity.setCorrelationid(req.getCorrelationId());
-        entity.setChargeAmount(req.getChargingAmount());
-        entity.setTaxAmount(req.getTaxAmount());
-        entity.setMsisdn(req.getMsisdn());
-        Date date2 = new Date();
-        entity.setDateTime(new Timestamp(date2.getTime()));
-        entity.setReason(res.getMsg());
-        entity.setStatusCode(res.getCode());
-        try {
-            moFailedRecordsRepository.save(entity);
-            logger.info("Records for failed Billing Inserted Successfull");
-        } catch (InvalidJpaQueryMethodException e) {
-            logger.error("Jpa Exception Caught Here: " + e.getCause());
-
-        }
     }
 
     protected String[] xmlConversion(String xml) {

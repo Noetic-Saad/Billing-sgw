@@ -1,10 +1,10 @@
 package com.noetic.sgw.billing.sgwbilling.util;
 
-public class Response {
+public class DcbApiResponse {
 
     private int code;
     private String msg;
-    private String correlationId;
+    private String operatorResponse;
 
     public int getCode() {
         return code;
@@ -22,11 +22,11 @@ public class Response {
         this.msg = msg;
     }
 
-    public String getCorrelationId() {
-        return correlationId;
+    public String getOperatorResponse() {
+        return operatorResponse;
     }
 
-    public void setCorrelationId(String correlationId) {
-        this.correlationId = correlationId;
+    public void setOperatorResponse(String operatorResponse) {
+        this.operatorResponse = operatorResponse;
     }
 }

@@ -21,7 +21,7 @@ class MoBillingController {
     private ChargingService chargingService;
 
     @PostMapping
-    public MoResponse chargeRequest(@RequestBody MoRequestProperties req) throws JsonProcessingException {
+    public MoResponse chargeRequest(@RequestBody MoRequestProperties req) throws JsonProcessingException, InterruptedException {
         System.out.println("Mo Charge Request");
         return chargingService.processMoChargeRequest(req);
     }
