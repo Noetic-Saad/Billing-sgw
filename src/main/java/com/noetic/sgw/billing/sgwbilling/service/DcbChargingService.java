@@ -24,8 +24,8 @@ public class DcbChargingService {
         if (operator_id == startConfiguration.getZong()) {
             requestProperties.setChargingAmount(Double.valueOf(properties.getPricePoint()));
         }else {
-            Double chargingAmount = Double.valueOf(properties.getPricePoint()) + Double.valueOf(properties.getTaxAmount());
-            requestProperties.setChargingAmount(chargingAmount);
+            requestProperties.setTaxAmount(Double.parseDouble(properties.getTaxAmount()));
+            requestProperties.setChargingAmount(Double.parseDouble(properties.getPricePoint()));
         }
 
         requestProperties.setCorrelationId("");
@@ -36,6 +36,7 @@ public class DcbChargingService {
         requestProperties.setShortcode("");
         requestProperties.setSubCycleId(0);
         requestProperties.setOriginDateTime(new Date());
+        requestProperties.setDcb(true);
 
         Response response = chargingService.processRequest(requestProperties);
 
@@ -61,7 +62,7 @@ public class DcbChargingService {
         } else if (response.getCode() == 0) {
             res.setOperatorResponse(String.valueOf(response.getCode()));
             res.setCode(ResponseTypeConstants.CHARGED_SUCCESSFUL);
-            res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
+            res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.CHARGED_SUCCESSFUL)));
         } else if (response.getCode() == 102) {
             res.setOperatorResponse(String.valueOf(response.getCode()));
             res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);

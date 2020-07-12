@@ -17,6 +17,6 @@ public class DcbController {
 
     @PostMapping
     public DcbApiResponse chargeRequest(@RequestBody DcbChargeRequestProperties req) throws Exception {
-        return dcbChargingService.processReqeust(req);
+        return dcbChargingService.processRequest(req);
     }
 }

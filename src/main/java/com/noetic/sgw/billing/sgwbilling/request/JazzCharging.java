@@ -2,9 +2,7 @@ package com.noetic.sgw.billing.sgwbilling.request;
 
 
 import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
-import com.noetic.sgw.billing.sgwbilling.entities.FailedBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
-import com.noetic.sgw.billing.sgwbilling.entities.SuccessBilledRecordsEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.TodaysChargedMsisdnsEntity;
 import com.noetic.sgw.billing.sgwbilling.repository.FailedRecordsRepository;
 import com.noetic.sgw.billing.sgwbilling.repository.GamesBillingRecordsRepository;
@@ -21,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.query.InvalidJpaQueryMethodException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,7 +36,6 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -55,7 +51,7 @@ public class JazzCharging {
     FailedRecordsRepository failedRecordsRepository;
     @Autowired StartConfiguration startConfiguration;
     @Autowired TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
-    private boolean isTestingFlagOff = true;
+    private boolean notTesting = false;
     private String methodName = "UpdateBalanceAndDate";
     private String transactionCurrency = "PKR";
     private String originNodeType = "EXT";
@@ -76,7 +72,7 @@ public class JazzCharging {
     public Response jazzChargeRequest(ChargeRequestProperties request) {
         String transID ="";
         Response res = new Response();
-        if(isTestingFlagOff) {
+        if(notTesting) {
             Date date = new Date(System.currentTimeMillis());
             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
             TimeZone PKT = TimeZone.getTimeZone("Asia/Karachi");
@@ -213,7 +209,10 @@ public class JazzCharging {
             }
         }else {
             logger.info("BILLING SERVICE || JAZZ CHARGING || MOCK REQUEST FOR || "+request.getMsisdn());
-            saveChargingRecords(res, request,transID);
+            responseCode = 0;
+            if(!request.isDcb()) {
+                saveChargingRecords(res, request, transID);
+            }
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
