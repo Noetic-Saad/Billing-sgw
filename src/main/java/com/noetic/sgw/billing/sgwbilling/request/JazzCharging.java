@@ -231,6 +231,8 @@ public class JazzCharging {
         entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
         if(res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL){
             entity.setIsCharged(1);
+            entity.setNoAttemptsMonthly(0);
+            entity.setNoOfDailyAttempts(0);
         }else {
             entity.setIsCharged(0);
         }
