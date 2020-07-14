@@ -52,6 +52,7 @@ public class PostPaidOrPrePaidCheckService {
         response = sendPostPaidCheckRequest();
         try {
             log.info("Request is here");
+            System.out.println("response.getStatus() = " + response.getStatus());
             return parseResponse(response.getBody());
         } catch (IllegalStateException e) {
             log.error("EXCEPTION " + e.getMessage());
@@ -144,6 +145,8 @@ public class PostPaidOrPrePaidCheckService {
                 "</methodCall>";
 
 
+        System.out.println("inputXML = " + inputXML);
+
             try {
                 response = Unirest.post(env.getProperty("jazz.api"))
                         .header("Authorization", env.getProperty("jazz.api.authorization"))
@@ -157,7 +160,7 @@ public class PostPaidOrPrePaidCheckService {
                         .body(inputXML).asString();
 
             }catch (Exception e){
-
+                System.out.println("e.getStackTrace() = " + e.getStackTrace());
             }
 
             return response;
