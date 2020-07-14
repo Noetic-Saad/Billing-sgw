@@ -18,6 +18,8 @@ public class ResponseTypeConstants {
     public static final int UNAUTHORIZED_REQUEST = 114;
     public static final int SUBSCRIBER_NOT_FOUND = 115;
     public static final int OTHER_ERROR = 116;
+    public static final int IS_POSTPAID = 130;
+    public static final String IS_POSTPAID_MSG = "Postpaid User";
     public static final int CHARGED_SUCCESSFULLY = 117;
 
 }

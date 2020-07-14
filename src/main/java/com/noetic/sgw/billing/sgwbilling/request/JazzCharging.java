@@ -14,6 +14,7 @@ import com.noetic.sgw.billing.sgwbilling.util.ResponseTypeConstants;
 import kong.unirest.HttpResponse;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import org.xml.sax.SAXParseException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.IOException;
 import java.io.StringReader;
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -38,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class JazzCharging {
@@ -69,10 +72,20 @@ public class JazzCharging {
     private GamesBillingRecordsRepository gamesBillingRecordsRepository;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    public Response jazzChargeRequest(ChargeRequestProperties request) {
+    public Response jazzChargeRequest(ChargeRequestProperties request) throws InterruptedException, ExecutionException, JSONException, IOException {
         String transID ="";
         Response res = new Response();
         if(notTesting) {
+            if(request.getIsRenewal()==0) {
+                if (checkPostPaid(String.valueOf(request.getMsisdn()))) {
+                    Response response = new Response();
+                    response.setCode(ResponseTypeConstants.IS_POSTPAID);
+                    response.setMsg(ResponseTypeConstants.IS_POSTPAID_MSG);
+                    response.setCorrelationId(request.getCorrelationId());
+                    saveChargingRecords(response, request, "postPaid-transId");
+                    return response;
+                }
+            }
             Date date = new Date(System.currentTimeMillis());
             DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd'T'HH:mm:ss");
             TimeZone PKT = TimeZone.getTimeZone("Asia/Karachi");
@@ -225,6 +238,12 @@ public class JazzCharging {
         return res;
     }
 
+    /**
+     * @desc save Charging Records for Games
+     * @param res
+     * @param req
+     * @param transactionId
+     */
     private void saveChargingRecords(Response res, ChargeRequestProperties req,String transactionId) {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
         entity.setAmount(req.getChargingAmount());
@@ -236,7 +255,11 @@ public class JazzCharging {
         }else {
             entity.setIsCharged(0);
         }
-        entity.setIsPostpaid(0);
+        if(res.getCode()==ResponseTypeConstants.IS_POSTPAID) {
+            entity.setIsPostpaid(1);
+        }else {
+            entity.setIsPostpaid(0);
+        }
         entity.setOparatorId(req.getOperatorId().shortValue());
         entity.setShareAmount(req.getShareAmount());
         entity.setShareAmount(req.getShareAmount());
@@ -267,6 +290,27 @@ public class JazzCharging {
         }
     }
 
+    /**
+     * @desc check if number is post-Paid
+     * @param msisdn
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * @throws JSONException
+     * @throws IOException
+     */
+    public boolean checkPostPaid(String msisdn) throws InterruptedException, ExecutionException, JSONException, IOException {
+        LocalDateTime now = LocalDateTime.now();
+        String transactionID = new Random().nextInt(9999 - 1000) + now.format(formatter);
+        PostPaidOrPrePaidCheckService postPaidOrPrePaidCheckService = new PostPaidOrPrePaidCheckService(msisdn,transactionID);
+        return postPaidOrPrePaidCheckService.isPostPaid();
+    }
+
+    /**
+     * @desc update todays Charged Table
+     * @param res
+     * @param req
+     */
     private void updateTodaysChargedTable(Response res, ChargeRequestProperties req) {
         TodaysChargedMsisdnsEntity chargedMsisdnsEntity = chargedMsisdnsRepository.findTopByMsisdn(req.getMsisdn());
         TodaysChargedMsisdnsEntity todaysChargedMsisdnsEntity = new TodaysChargedMsisdnsEntity();
@@ -299,6 +343,11 @@ public class JazzCharging {
 
     }
 
+    /**
+     * @desc parse XML and get response
+     * @param xml
+     * @return
+     */
     protected
     String[] xmlConversion(String xml) {
         String[] retArray = new String[2];
