@@ -54,11 +54,19 @@ class ChargingService {
         if (operator_id == startConfiguration.getTelenor()) {
             response = telenorCharging.chargeRequest(req);
         } else if (operator_id == startConfiguration.getJazz()) {
-            response = jazzCharging.jazzChargeRequest(req);
+            try {
+                response = jazzCharging.jazzChargeRequest(req);
+            }catch (Exception e){
+                logger.error("Exception Here "+req.getMsisdn());
+            }
         } else if (operator_id == startConfiguration.getWarid()) {
 
         } else if (operator_id == startConfiguration.getZong()) {
-            response = zongCharging.sendChargingRequest(req);
+            try {
+                response = zongCharging.sendChargingRequest(req);
+            }catch (Exception e){
+                logger.error("Exception Here "+req.getMsisdn());
+            }
         } else {
 
         }
