@@ -100,6 +100,7 @@ public class ZongMMLRequest {
             System.out.println("Deduct Response IS Null");
             throw new Exception();
         }
+        System.out.println("The Value of  = " + output);
         return output;
     }
 
