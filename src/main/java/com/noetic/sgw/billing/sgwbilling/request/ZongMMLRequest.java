@@ -68,13 +68,8 @@ public class ZongMMLRequest {
         } catch (Throwable e) {
             e.printStackTrace();
             output = "ArgumentNullException" + e;
-        } finally {
-            try {
-                stream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
+        
 
         return output;
     }

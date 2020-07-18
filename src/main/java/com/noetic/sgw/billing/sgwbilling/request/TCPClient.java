@@ -16,6 +16,7 @@ public class TCPClient {
 
             clientSocket = new Socket(ServerIP,ServerPort);
             clientSocket.setTcpNoDelay(true);
+            clientSocket.setKeepAlive(true);
 
         } catch (UnknownHostException e) {
             // TODO Auto-generated catch block
