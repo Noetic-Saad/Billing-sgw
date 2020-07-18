@@ -69,7 +69,7 @@ class ChargingService {
         return response;
     }
 
-    public MoResponse processMoChargeRequest(MoRequestProperties req) throws InterruptedException {
+    public MoResponse processMoChargeRequest(MoRequestProperties req) throws Exception {
 
         if (req.getOperatorId() == startConfiguration.getJazz() ||
                 req.getOperatorId() == startConfiguration.getWarid()) {
