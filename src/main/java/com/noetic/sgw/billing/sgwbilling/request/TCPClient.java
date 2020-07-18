@@ -13,7 +13,6 @@ public class TCPClient {
     public void Connect(String ServerIP, int ServerPort) {
         //create client socket, connect to server
         try {
-            clientSocket.setKeepAlive(true);
             clientSocket = new Socket(ServerIP,ServerPort);
 
         } catch (UnknownHostException e) {
