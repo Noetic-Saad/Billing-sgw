@@ -11,14 +11,18 @@ import java.net.SocketException;
 public class ZongMMLRequest {
 
     private static final Logger log = LoggerFactory.getLogger(ZongMMLRequest.class);
+
     public TCPClient client;
 
-    public void serverConnection() {
+    public TCPClient serverConnection() {
         String ServerIP = "172.20.51.81";
         int ServerPort = 8799;
         client = new TCPClient();
         client.Connect(ServerIP, ServerPort);
+        return client;
     }
+
+
 
     public String connect(String message, String flag) throws SocketException {
         String output = "";
