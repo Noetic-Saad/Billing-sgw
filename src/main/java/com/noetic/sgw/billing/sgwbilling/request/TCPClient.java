@@ -13,8 +13,9 @@ public class TCPClient {
     public void Connect(String ServerIP, int ServerPort) {
         //create client socket, connect to server
         try {
-            clientSocket.setTcpNoDelay(true);
+
             clientSocket = new Socket(ServerIP,ServerPort);
+            clientSocket.setTcpNoDelay(true);
 
         } catch (UnknownHostException e) {
             // TODO Auto-generated catch block
