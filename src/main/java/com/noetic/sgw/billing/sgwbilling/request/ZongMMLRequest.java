@@ -72,7 +72,7 @@ public class ZongMMLRequest {
             responseData = new String(data, "US-ASCII");
             output = "Received:  " + responseData;
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             output = "ArgumentNullException" + e;
             logIn();
             deductConnect(message,flag);
