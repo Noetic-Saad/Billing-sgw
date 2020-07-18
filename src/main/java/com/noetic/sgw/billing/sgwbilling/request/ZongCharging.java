@@ -62,15 +62,23 @@ public class ZongCharging {
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
-                if(response.equalsIgnoreCase("Received:  ")){
-                    System.out.println("Tying again From ZONGCHARGING");
+                String[] zongRes = response.split("RETN=");
+                String[] codeArr = null;
+                try {
+                    codeArr = zongRes[1].split(",");
+                }catch (ArrayIndexOutOfBoundsException e){
+                    log.error("Exception Caught Here ArrayIndexOutOfBoundsException");
                     zongMMLRequest.serverConnection();
                     zongMMLRequest.logIn();
                     response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
+
                 }
-                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
-                String[] zongRes = response.split("RETN=");
-                String[] codeArr = zongRes[1].split(",");
+                zongRes = response.split("RETN=");
+                try {
+                    codeArr = zongRes[1].split(",");
+                }catch (ArrayIndexOutOfBoundsException e){
+                    System.out.println("Again Caught Same Exception");
+                }
                 code = codeArr[0];
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
 
