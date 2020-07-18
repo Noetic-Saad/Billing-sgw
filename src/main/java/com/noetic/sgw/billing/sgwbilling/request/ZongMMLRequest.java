@@ -73,8 +73,9 @@ public class ZongMMLRequest {
             output = "Received:  " + responseData;
 
         } catch (Throwable e) {
-            e.printStackTrace();
             output = "ArgumentNullException" + e;
+            logIn();
+            deductConnect(message,flag);
         }
         return output;
     }
@@ -107,7 +108,9 @@ public class ZongMMLRequest {
     {
         String hearbeat=  "`SC`0004HBHBB7BDB7BD";
         try {
-            connect(hearbeat,"N");
+            System.out.println("Heart Beat Sent");
+            String response = connect(hearbeat, "N");
+            System.out.println(response);
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -169,6 +172,11 @@ public class ZongMMLRequest {
     public void heartBeatScheduler(){
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
         ses.scheduleAtFixedRate(()->sendHearBeat(), 0, 20, TimeUnit.SECONDS);
+    }
+
+    public static void main(String[] args) {
+        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
+        ses.scheduleAtFixedRate(()-> System.out.println("Hi"), 0, 20, TimeUnit.SECONDS);
     }
 
 }
