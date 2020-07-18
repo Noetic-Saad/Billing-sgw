@@ -223,7 +223,7 @@ public class ZongCharging {
         while (true){
             if(!failedRequests.isEmpty()){
                 int size = failedRequests.size();
-                log.debug("Failed List Size "+size);
+                log.info("Failed List Size "+size);
                 ChargeRequestProperties requestProperties = failedRequests.remove(--size);
                 try {
                     sendChargingRequest(requestProperties);
