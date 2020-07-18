@@ -94,7 +94,7 @@ public class ZongMMLRequest {
             deductConnect(message,flag);
             throw new Exception();
         }
-        if(responseData ==null || responseData ==""){
+        if(responseData ==null || responseData.equalsIgnoreCase("")){
             serverConnection();
             logIn();
             deductConnect(message,flag);
