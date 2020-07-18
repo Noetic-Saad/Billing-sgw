@@ -12,7 +12,7 @@ public class ZongMMLRequest {
 
     private static final Logger log = LoggerFactory.getLogger(ZongMMLRequest.class);
 
-    public TCPClient client;
+    public static TCPClient client;
 
     public TCPClient serverConnection() {
         String ServerIP = "172.20.51.81";
@@ -24,7 +24,7 @@ public class ZongMMLRequest {
 
 
 
-    public String connect(String message, String flag) throws SocketException {
+    synchronized String connect(String message, String flag) throws SocketException {
         String output = "";
         OutputStream stream = null;
         try {
