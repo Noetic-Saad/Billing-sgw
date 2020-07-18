@@ -47,7 +47,7 @@ public class TCPClient {
     }
 
     //Get Stream
-    protected OutputStream GetStream() {
+    public OutputStream GetStream() {
         OutputStream OutputStream=null;
         try {
             OutputStream =  clientSocket.getOutputStream();
