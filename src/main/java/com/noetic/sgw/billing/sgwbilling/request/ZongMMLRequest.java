@@ -69,8 +69,6 @@ public class ZongMMLRequest {
             e.printStackTrace();
             output = "ArgumentNullException" + e;
         }
-        
-
         return output;
     }
 
