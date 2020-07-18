@@ -27,7 +27,6 @@ public class AppBootListner implements ApplicationListener<ApplicationReadyEvent
         } catch (Exception e) {
         }
         zongMMLRequest.heartBeatScheduler();
-        zongCharging.processFailed();
         startConfiguration.loadChargingMechanism();
         startConfiguration.loadOperator();
         startConfiguration.loadOperatorPlan();
