@@ -95,7 +95,6 @@ public class ZongMMLRequest {
         String loginbody = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER="+userid+",PSWD="+password+";";
         String login = loginbody;
 
-        serverConnection();
         String CKsumLogin = chksum(login);
 
         String logincommand = null;
@@ -114,6 +113,7 @@ public class ZongMMLRequest {
         String hearbeat=  "`SC`0004HBHBB7BDB7BD";
         try {
             System.out.println("Heart Beat Sent");
+            logIn();
             String response = connect(hearbeat, "N");
             System.out.println(response);
         } catch (SocketException e) {
@@ -149,6 +149,7 @@ public class ZongMMLRequest {
     }
 
     public String deductBalance(String number, String amt, String serviceId) {
+        logIn();
         String header ="`SC`";
         String requestBody = "00761.00JS123456USSD_Pay00000001DLGCON    00000003TXBEG     DEDUCTBALANCE:DN="+number+",AMT="+amt+",SERVICE="+serviceId+",SUBTYPE=P";
         String headerAndBody = header + requestBody;
