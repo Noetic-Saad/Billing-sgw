@@ -41,10 +41,35 @@ public class ZongMMLRequest {
 
         } catch (Throwable e) {
             output = "ArgumentNullException" + e;
+        }
+
+        return output;
+    }
+
+    public String deductConnect(String message, String flag) throws SocketException {
+        String output = "";
+        OutputStream stream = null;
+        try {
+            //  	log.debug("IN CONNECT...");
+            //String message = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER=Noetic,PSWD=Noetic@123;AEBA9EF6";
+            byte[] data = message.getBytes("US-ASCII");
+            stream = client.GetStream();
+            stream.write(data, 0, data.length);
+            output = "Sent: " + message;
+
+            data = new byte[10240];
+            String responseData = null;
+
+            InputStream stream_in = client.Read();
+            int bytes = stream_in.read(data, 0, data.length);
+            responseData = new String(data, "US-ASCII");
+            output = "Received:  " + responseData;
+
+        } catch (Throwable e) {
+            output = "ArgumentNullException" + e;
         } finally {
             try {
                 stream.close();
-                client.closeConnection();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -123,7 +148,7 @@ public class ZongMMLRequest {
 
         try {
             log.info("CHARGING | ZONGMMLREQUEST CLASS | SENT | "+headerAndBody+chksum);
-            deductBalCommand = connect(headerAndBody+chksum, "N");
+            deductBalCommand = deductConnect(headerAndBody+chksum, "N");
         } catch (SocketException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
