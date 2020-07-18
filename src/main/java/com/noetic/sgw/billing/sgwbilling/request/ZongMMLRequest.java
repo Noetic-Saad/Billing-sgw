@@ -77,6 +77,11 @@ public class ZongMMLRequest {
             logIn();
             deductConnect(message,flag);
         }
+        if(output==null || output ==""){
+            logIn();
+            deductConnect(message,flag);
+            Thread.currentThread().interrupt();
+        }
         return output;
     }
 
