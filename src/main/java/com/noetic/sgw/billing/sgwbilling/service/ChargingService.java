@@ -62,11 +62,7 @@ class ChargingService {
         } else if (operator_id == startConfiguration.getWarid()) {
 
         } else if (operator_id == startConfiguration.getZong()) {
-            try {
                 response = zongCharging.sendChargingRequest(req);
-            }catch (Exception e){
-                logger.error("Exception Here "+e);
-            }
         } else {
 
         }
