@@ -45,7 +45,7 @@ public class ZongCharging {
     private WeeklyChargedMsisdnsRepository weeklyChargedMsisdnsRepository;
     @Autowired TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
 
-    public Response sendChargingRequest(ChargeRequestProperties request){
+    public Response sendChargingRequest(ChargeRequestProperties request) throws Exception {
         String charginAmount = "";
         boolean isAlreadyCharged = false;
         Date date1 = new Date();

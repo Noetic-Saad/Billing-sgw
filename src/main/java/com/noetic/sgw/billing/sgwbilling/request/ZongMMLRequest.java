@@ -1,5 +1,6 @@
 package com.noetic.sgw.billing.sgwbilling.request;
 
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ public class ZongMMLRequest {
 
 
 
-    synchronized String connect(String message, String flag) throws SocketException {
+    synchronized String connect(String message, String flag) throws Exception {
         String output = "";
         OutputStream stream = null;
         try {
@@ -49,20 +50,20 @@ public class ZongMMLRequest {
         } catch (Throwable e) {
             serverConnection();
             logIn();
-            Thread.currentThread().interrupt();
             output = "ArgumentNullException" + e;
+            throw new Exception();
         }
 
         if(output == ""){
             serverConnection();
             logIn();
-            Thread.currentThread().interrupt();
+            throw new Exception();
         }
 
         return output;
     }
 
-    public String deductConnect(String message, String flag) throws SocketException {
+    public String deductConnect(String message, String flag) throws Exception {
         String output = "";
         OutputStream stream = null;
         try {
@@ -85,12 +86,12 @@ public class ZongMMLRequest {
             output = "ArgumentNullException" + e;
             logIn();
             deductConnect(message,flag);
-            Thread.currentThread().interrupt();
+            throw new Exception();
         }
         if(output==null || output ==""){
             logIn();
             deductConnect(message,flag);
-            Thread.currentThread().interrupt();
+            throw new Exception();
         }
         return output;
     }
@@ -99,7 +100,7 @@ public class ZongMMLRequest {
         serverConnection();
     }
 
-    public String logIn() {
+    public String logIn() throws Exception{
         String userid = "Noetic";
         String password = "Noetic@123";
         String loginbody = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER="+userid+",PSWD="+password+";";
@@ -117,8 +118,7 @@ public class ZongMMLRequest {
         return logincommand;
     }
 
-    public void sendHearBeat()
-    {
+    public void sendHearBeat() throws Exception {
         String hearbeat=  "`SC`0004HBHBB7BDB7BD";
         try {
             System.out.println("Heart Beat Sent");
@@ -157,7 +157,7 @@ public class ZongMMLRequest {
         }
     }
 
-    public String deductBalance(String number, String amt, String serviceId) {
+    public String deductBalance(String number, String amt, String serviceId) throws Exception {
         logIn();
         String header ="`SC`";
         String requestBody = "00761.00JS123456USSD_Pay00000001DLGCON    00000003TXBEG     DEDUCTBALANCE:DN="+number+",AMT="+amt+",SERVICE="+serviceId+",SUBTYPE=P";

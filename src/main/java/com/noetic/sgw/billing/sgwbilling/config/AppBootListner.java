@@ -19,7 +19,10 @@ public class AppBootListner implements ApplicationListener<ApplicationReadyEvent
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
         zongMMLRequest.serverConnection();
-        zongMMLRequest.logIn();
+        try {
+            zongMMLRequest.logIn();
+        } catch (Exception e) {
+        }
         zongMMLRequest.heartBeatScheduler();
         startConfiguration.loadChargingMechanism();
         startConfiguration.loadOperator();
