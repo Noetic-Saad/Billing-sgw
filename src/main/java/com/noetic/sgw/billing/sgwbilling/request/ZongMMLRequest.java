@@ -69,6 +69,7 @@ public class ZongMMLRequest {
     public String deductConnect(String message, String flag) throws Exception {
         String output = "";
         OutputStream stream = null;
+        String responseData = null;
         try {
             //  	log.debug("IN CONNECT...");
             //String message = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER=Noetic,PSWD=Noetic@123;AEBA9EF6";
@@ -78,7 +79,7 @@ public class ZongMMLRequest {
             output = "Sent: " + message;
 
             data = new byte[10240];
-            String responseData = null;
+
 
             InputStream stream_in = client.Read();
             int bytes = stream_in.read(data, 0, data.length);
@@ -93,7 +94,7 @@ public class ZongMMLRequest {
             deductConnect(message,flag);
             throw new Exception();
         }
-        if(output==null || output ==" " || output =="  "){
+        if(responseData ==null || responseData ==""){
             serverConnection();
             logIn();
             deductConnect(message,flag);
