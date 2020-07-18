@@ -47,7 +47,12 @@ public class ZongMMLRequest {
             output = "Received:  " + responseData;
 
         } catch (Throwable e) {
+            serverConnection();
             output = "ArgumentNullException" + e;
+        }
+
+        if(output == ""){
+            serverConnection();
         }
 
         return output;
