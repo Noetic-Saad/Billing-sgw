@@ -41,6 +41,13 @@ public class ZongMMLRequest {
 
         } catch (Throwable e) {
             output = "ArgumentNullException" + e;
+        } finally {
+            try {
+                client.GetStream().close();
+                client.closeConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         return output;
@@ -122,13 +129,13 @@ public class ZongMMLRequest {
             e.printStackTrace();
             return null;
         }
-        client = new TCPClient();
+        /*client = new TCPClient();
         try {
             client.GetStream().close();
             client.closeConnection();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
         return deductBalCommand;
     }
