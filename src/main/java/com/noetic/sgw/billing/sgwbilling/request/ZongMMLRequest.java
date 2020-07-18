@@ -66,6 +66,7 @@ public class ZongMMLRequest {
             output = "Received:  " + responseData;
 
         } catch (Throwable e) {
+            e.printStackTrace();
             output = "ArgumentNullException" + e;
         } finally {
             try {
