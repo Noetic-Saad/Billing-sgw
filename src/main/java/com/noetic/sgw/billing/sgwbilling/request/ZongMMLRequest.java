@@ -93,7 +93,7 @@ public class ZongMMLRequest {
             deductConnect(message,flag);
             throw new Exception();
         }
-        if(output==null || output ==""){
+        if(output==null || output ==" " || output =="  "){
             serverConnection();
             logIn();
             deductConnect(message,flag);
