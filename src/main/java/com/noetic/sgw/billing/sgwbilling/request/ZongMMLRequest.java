@@ -48,11 +48,15 @@ public class ZongMMLRequest {
 
         } catch (Throwable e) {
             serverConnection();
+            logIn();
+            Thread.currentThread().interrupt();
             output = "ArgumentNullException" + e;
         }
 
         if(output == ""){
             serverConnection();
+            logIn();
+            Thread.currentThread().interrupt();
         }
 
         return output;
@@ -81,6 +85,7 @@ public class ZongMMLRequest {
             output = "ArgumentNullException" + e;
             logIn();
             deductConnect(message,flag);
+            Thread.currentThread().interrupt();
         }
         if(output==null || output ==""){
             logIn();
