@@ -62,7 +62,9 @@ public class ZongCharging {
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
-                if(response == null){
+                if(response.equalsIgnoreCase("Received:  ")){
+                    System.out.println("Tying again From ZONGCHARGING");
+                    zongMMLRequest.serverConnection();
                     zongMMLRequest.logIn();
                     response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 }
