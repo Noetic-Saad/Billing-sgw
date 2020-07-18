@@ -65,7 +65,7 @@ class ChargingService {
             try {
                 response = zongCharging.sendChargingRequest(req);
             }catch (Exception e){
-                logger.error("Exception Here "+req.getMsisdn());
+                logger.error("Exception Here "+e);
             }
         } else {
 
