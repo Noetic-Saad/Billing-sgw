@@ -34,7 +34,7 @@ public class ZongMoCharging {
     @Autowired
     private MoBilledRecordsRepository moBilledRecordsRepository;
 
-    public MoResponse sendChargingRequest(MoRequestProperties request) throws InterruptedException {
+    public MoResponse sendChargingRequest(MoRequestProperties request) throws Exception {
         String charginAmount = "";
 
         Integer shortcode = Integer.valueOf(request.getShortcode());
