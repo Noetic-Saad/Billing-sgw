@@ -104,7 +104,6 @@ public class ZongMMLRequest {
 
         String logincommand = null;
         try {
-            log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN REQUEST | "+login + CKsumLogin);
             logincommand = connect(login + CKsumLogin, "N");
         } catch (SocketException e) {
             e.printStackTrace();
@@ -182,12 +181,7 @@ public class ZongMMLRequest {
 
     public void heartBeatScheduler(){
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(()->sendHearBeat(), 0, 20, TimeUnit.SECONDS);
-    }
-
-    public static void main(String[] args) {
-        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(()-> System.out.println("Hi"), 0, 20, TimeUnit.SECONDS);
+        ses.scheduleAtFixedRate(()->serverConnection(), 0, 20, TimeUnit.SECONDS);
     }
 
 }
