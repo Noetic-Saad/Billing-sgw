@@ -57,7 +57,7 @@ public class ZongCharging {
         if(!testing) {
             if (!isAlreadyCharged) {
                 try {
-                    zongMMLRequest.logIn();
+                    //zongMMLRequest.logIn();
                 }catch (Exception e){
                     System.out.println("Exception = " + e);
                     zongMMLRequest.getServerConnection();
