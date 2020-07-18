@@ -1,5 +1,6 @@
 package com.noetic.sgw.billing.sgwbilling.config;
 
+import com.noetic.sgw.billing.sgwbilling.request.ZongMMLRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppBootListner implements ApplicationListener<ApplicationReadyEvent> {
 
-
+    private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
 
     @Autowired
     StartConfiguration startConfiguration;
@@ -18,6 +19,7 @@ public class AppBootListner implements ApplicationListener<ApplicationReadyEvent
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
 
+        zongMMLRequest.getServerConnection();
         startConfiguration.loadChargingMechanism();
         startConfiguration.loadOperator();
         startConfiguration.loadOperatorPlan();

@@ -45,13 +45,17 @@ public class ZongMMLRequest {
         return output;
     }
 
+    public void getServerConnection(){
+        serverConnection();
+    }
+
     public String logIn() {
         String userid = "Noetic";
         String password = "Noetic@123";
         String loginbody = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER="+userid+",PSWD="+password+";";
         String login = loginbody;
 
-        serverConnection();
+
         String CKsumLogin = chksum(login);
 
         String logincommand = null;
@@ -63,6 +67,16 @@ public class ZongMMLRequest {
         }
         log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN RESPONSE | "+logincommand);
         return logincommand;
+    }
+
+    public void sendHearBeat()
+    {
+        String hearbeat=  "`SC`0004HBHBB7BDB7BD";
+        try {
+            connect(hearbeat,"N");
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
     }
 
     public String chksum(String cmd) {
