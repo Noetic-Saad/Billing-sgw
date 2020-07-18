@@ -20,9 +20,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class ZongCharging {
@@ -44,6 +42,8 @@ public class ZongCharging {
     @Autowired
     private WeeklyChargedMsisdnsRepository weeklyChargedMsisdnsRepository;
     @Autowired TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
+
+    List<ChargeRequestProperties> failedRequests = new ArrayList<>();
 
     public Response sendChargingRequest(ChargeRequestProperties request) throws Exception {
         String charginAmount = "";
@@ -67,10 +67,13 @@ public class ZongCharging {
                 try {
                     codeArr = zongRes[1].split(",");
                 }catch (ArrayIndexOutOfBoundsException e){
-                    log.error("Exception Caught Here ArrayIndexOutOfBoundsException");
-                    zongMMLRequest.serverConnection();
-                    zongMMLRequest.logIn();
-                    response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
+                    if(request.getIsRenewal()==1){
+                        failedRequests.add(request);
+                    }else {
+                        log.error("Exception Caught Here ArrayIndexOutOfBoundsException");
+                        zongMMLRequest.serverConnection();
+                        response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
+                    }
 
                 }
                 zongRes = response.split("RETN=");
@@ -213,6 +216,21 @@ public class ZongCharging {
             chargedMsisdnsRepository.save(chargedMsisdnsEntity);
         }
 
+    }
+
+    public void processFailed(){
+
+        while (true){
+            if(!failedRequests.isEmpty()){
+                int size = failedRequests.size();
+                log.debug("Failed List Size "+size);
+                ChargeRequestProperties requestProperties = failedRequests.remove(--size);
+                try {
+                    sendChargingRequest(requestProperties);
+                } catch (Exception e) {
+                }
+            }
+        }
     }
 
 }
