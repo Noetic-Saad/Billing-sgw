@@ -38,6 +38,14 @@ public class TCPClient {
         return MyInputStream;
     }
 
+    public void closeConnection(){
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     //Get Stream
     protected OutputStream GetStream() {
         OutputStream OutputStream=null;

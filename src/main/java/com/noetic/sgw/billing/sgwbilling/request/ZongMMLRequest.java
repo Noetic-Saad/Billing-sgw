@@ -55,7 +55,7 @@ public class ZongMMLRequest {
         String loginbody = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER="+userid+",PSWD="+password+";";
         String login = loginbody;
 
-
+        serverConnection();
         String CKsumLogin = chksum(login);
 
         String logincommand = null;
@@ -66,6 +66,7 @@ public class ZongMMLRequest {
             e.printStackTrace();
         }
         log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN RESPONSE | "+logincommand);
+        client.closeConnection();
         return logincommand;
     }
 
@@ -121,6 +122,7 @@ public class ZongMMLRequest {
             e.printStackTrace();
             return null;
         }
+        client.closeConnection();
         return deductBalCommand;
     }
 
