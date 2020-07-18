@@ -66,7 +66,6 @@ public class ZongMMLRequest {
             e.printStackTrace();
         }
         log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN RESPONSE | "+logincommand);
-        client.closeConnection();
         return logincommand;
     }
 
