@@ -51,10 +51,13 @@ public class ZongMMLRequest {
             serverConnection();
             logIn();
             output = "ArgumentNullException" + e;
+            System.out.println("Response IS Null");
             throw new Exception();
         }
 
         if(output == ""){
+
+            System.out.println("Response IS Null");
             serverConnection();
             logIn();
             throw new Exception();
@@ -84,13 +87,17 @@ public class ZongMMLRequest {
 
         } catch (Exception e) {
             output = "ArgumentNullException" + e;
+            System.out.println("Deduct Response IS Null");
+            serverConnection();
             logIn();
             deductConnect(message,flag);
             throw new Exception();
         }
         if(output==null || output ==""){
+            serverConnection();
             logIn();
             deductConnect(message,flag);
+            System.out.println("Deduct Response IS Null");
             throw new Exception();
         }
         return output;
@@ -186,7 +193,7 @@ public class ZongMMLRequest {
 
     public void heartBeatScheduler(){
         ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(()->serverConnection(), 0, 20, TimeUnit.SECONDS);
+        ses.scheduleAtFixedRate(()->serverConnection(), 0, 10, TimeUnit.SECONDS);
     }
 
 }
