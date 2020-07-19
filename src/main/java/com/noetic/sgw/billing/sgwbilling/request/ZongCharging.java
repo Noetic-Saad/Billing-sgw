@@ -66,9 +66,9 @@ public class ZongCharging {
                 String[] zongRes = response.split("RETN=");
                 String[] codeArr = new String[2];
                 if (zongRes.length < 2) {
-                    codeArr = zongRes[1].split(",");
-                } else {
                     codeArr[0] = "2001";
+                } else {
+                    codeArr = zongRes[1].split(",");
                 }
                 code = codeArr[0];
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
