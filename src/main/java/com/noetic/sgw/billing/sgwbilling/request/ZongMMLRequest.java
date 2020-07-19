@@ -118,5 +118,4 @@ public class ZongMMLRequest {
 
         return deductBalCommand;
     }
-
 }

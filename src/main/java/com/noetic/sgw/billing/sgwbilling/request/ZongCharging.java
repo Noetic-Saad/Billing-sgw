@@ -57,10 +57,6 @@ public class ZongCharging {
         String code = null;
         LocalDateTime localDateTime = LocalDateTime.ofInstant(date1.toInstant(), ZoneId.systemDefault());
         Date toDate = Date.from(localDateTime.minusHours(12).atZone(ZoneId.systemDefault()).toInstant());
-        /*GamesBillingRecordEntity successEntity = gamesBillingRecordsRepository.isAlreadyCharged(request.getMsisdn(), date1, toDate);
-        if (successEntity != null) {
-            isAlreadyCharged = true;
-        }*/
         if (!testing) {
             if (!isAlreadyCharged) {
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
@@ -68,13 +64,7 @@ public class ZongCharging {
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
                 String[] zongRes = response.split("RETN=");
-                String[] codeArr = null;
-                try {
-                    codeArr = zongRes[1].split(",");
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
-                }
-                zongRes = response.split("RETN=");
+                String[] codeArr = new String[2];
                 if (zongRes.length < 2) {
                     codeArr = zongRes[1].split(",");
                 } else {
@@ -231,5 +221,6 @@ public class ZongCharging {
             }
         }
     }
+
 
 }
