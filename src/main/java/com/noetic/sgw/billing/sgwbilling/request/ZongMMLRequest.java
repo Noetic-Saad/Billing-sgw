@@ -16,17 +16,15 @@ public class ZongMMLRequest {
 
     private static final Logger log = LoggerFactory.getLogger(ZongMMLRequest.class);
 
-    public static TCPClient client;
 
-    public TCPClient serverConnection() {
-        String ServerIP = "172.20.51.81";
-        int ServerPort = 8799;
-        client = new TCPClient();
-        client.Connect(ServerIP, ServerPort);
-        return client;
+    private static TCPClient client;
+
+    public ZongMMLRequest(TCPClient tcpClient){
+        this.client = tcpClient;
     }
 
-
+    public ZongMMLRequest() {
+    }
 
     synchronized String connect(String message, String flag) throws Exception {
         String output = "";
@@ -48,19 +46,7 @@ public class ZongMMLRequest {
             output = "Received:  " + responseData;
 
         } catch (Throwable e) {
-            serverConnection();
-            logIn();
             output = "ArgumentNullException" + e;
-            System.out.println("Response IS Null");
-            throw new Exception();
-        }
-
-        if(output == ""){
-
-            System.out.println("Response IS Null");
-            serverConnection();
-            logIn();
-            throw new Exception();
         }
 
         return output;
@@ -87,26 +73,10 @@ public class ZongMMLRequest {
             output = "Received:  " + responseData;
 
         } catch (Exception e) {
-            output = "ArgumentNullException" + e;
-            System.out.println("Deduct Response IS Null");
-            serverConnection();
-            logIn();
-            deductConnect(message,flag);
-            throw new Exception();
-        }
-        if(responseData ==null || responseData.equalsIgnoreCase("")){
-            serverConnection();
-            logIn();
-            deductConnect(message,flag);
-            System.out.println("Deduct Response IS Null");
             throw new Exception();
         }
         System.out.println("The Value of  = " + output);
         return output;
-    }
-
-    public void getServerConnection(){
-        serverConnection();
     }
 
     public String logIn() throws Exception{
@@ -182,20 +152,8 @@ public class ZongMMLRequest {
             e.printStackTrace();
             return null;
         }
-        /*client = new TCPClient();
-        try {
-            client.GetStream().close();
-            client.closeConnection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
 
         return deductBalCommand;
-    }
-
-    public void heartBeatScheduler(){
-        ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(()->serverConnection(), 0, 10, TimeUnit.SECONDS);
     }
 
 }

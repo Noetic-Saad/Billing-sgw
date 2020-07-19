@@ -1,5 +1,6 @@
 package com.noetic.sgw.billing.sgwbilling.request;
 
+import com.noetic.sgw.billing.sgwbilling.config.AppBootListner;
 import com.noetic.sgw.billing.sgwbilling.config.StartConfiguration;
 import com.noetic.sgw.billing.sgwbilling.entities.GamesBillingRecordEntity;
 import com.noetic.sgw.billing.sgwbilling.entities.TodaysChargedMsisdnsEntity;
@@ -31,6 +32,9 @@ public class ZongCharging {
 
     public TCPClient client;
 
+    @Autowired
+    AppBootListner appBootListner;
+
     private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -58,7 +62,6 @@ public class ZongCharging {
         }*/
         if(!testing) {
             if (!isAlreadyCharged) {
-                //zongMMLRequest.logIn();
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
@@ -67,17 +70,16 @@ public class ZongCharging {
                 try {
                     codeArr = zongRes[1].split(",");
                 }catch (ArrayIndexOutOfBoundsException e){
-                    if(request.getIsRenewal()==1){
-                        failedRequests.add(request);
-                    }else {
-                        log.error("Exception Caught Here ArrayIndexOutOfBoundsException");
-                        zongMMLRequest.serverConnection();
-                        response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
-                    }
-
+                    appBootListner.getTcpConnection();
+                    response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 }
                 zongRes = response.split("RETN=");
                 try {
+                    /*if(zongRes.length>1) {
+                        codeArr = zongRes[1].split(",");
+                    }else {
+                        codeArr[0] = "2001";
+                    }*/
                     codeArr = zongRes[1].split(",");
                 }catch (ArrayIndexOutOfBoundsException e){
                     System.out.println("Again Caught Same Exception");
