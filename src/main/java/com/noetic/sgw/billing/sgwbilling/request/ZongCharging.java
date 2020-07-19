@@ -45,7 +45,8 @@ public class ZongCharging {
     private GamesBillingRecordsRepository gamesBillingRecordsRepository;
     @Autowired
     private WeeklyChargedMsisdnsRepository weeklyChargedMsisdnsRepository;
-    @Autowired TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
+    @Autowired
+    TodaysChargedMsisdnsRepository chargedMsisdnsRepository;
 
     List<ChargeRequestProperties> failedRequests = new ArrayList<>();
 
@@ -60,29 +61,24 @@ public class ZongCharging {
         if (successEntity != null) {
             isAlreadyCharged = true;
         }*/
-        if(!testing) {
+        if (!testing) {
             if (!isAlreadyCharged) {
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
+                zongMMLRequest.logIn();
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
                 String[] zongRes = response.split("RETN=");
                 String[] codeArr = null;
                 try {
                     codeArr = zongRes[1].split(",");
-                }catch (ArrayIndexOutOfBoundsException e){
-                    appBootListner.getTcpConnection();
+                } catch (ArrayIndexOutOfBoundsException e) {
                     response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
                 }
                 zongRes = response.split("RETN=");
-                try {
-                    /*if(zongRes.length>1) {
-                        codeArr = zongRes[1].split(",");
-                    }else {
-                        codeArr[0] = "2001";
-                    }*/
+                if (zongRes.length < 2) {
                     codeArr = zongRes[1].split(",");
-                }catch (ArrayIndexOutOfBoundsException e){
-                    System.out.println("Again Caught Same Exception");
+                } else {
+                    codeArr[0] = "2001";
                 }
                 code = codeArr[0];
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
@@ -101,15 +97,15 @@ public class ZongCharging {
                 res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
                 res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
             }
-        }else {
-            log.info("BILLING SERVICE || ZONG CHARGING || MOCK REQUEST FOR || "+request.getMsisdn());
+        } else {
+            log.info("BILLING SERVICE || ZONG CHARGING || MOCK REQUEST FOR || " + request.getMsisdn());
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
         }
-        if(request.isDcb()){
+        if (request.isDcb()) {
             res.setCode(Integer.valueOf(code));
-        }else {
+        } else {
             saveChargingRecords(res, request);
         }
         return res;
@@ -119,9 +115,9 @@ public class ZongCharging {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
         entity.setAmount(req.getChargingAmount());
         entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
-        if(res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL){
+        if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
             entity.setIsCharged(1);
-        }else {
+        } else {
             entity.setIsCharged(0);
         }
         entity.setIsPostpaid(0);
@@ -133,11 +129,11 @@ public class ZongCharging {
         entity.setTaxAmount(req.getTaxAmount());
         entity.setVendorPlanId(req.getVendorPlanId().longValue());
         entity.setSubCycleId((short) req.getSubCycleId());
-        if(req.getIsRenewal()==1){
+        if (req.getIsRenewal() == 1) {
             entity.setNoOfDailyAttempts(req.getDailyAttempts());
             entity.setNoAttemptsMonthly(req.getAttempts());
             entity.setIsRenewal(1);
-        }else {
+        } else {
             entity.setNoAttemptsMonthly(1);
             entity.setNoOfDailyAttempts(1);
             entity.setIsRenewal(0);
@@ -146,14 +142,14 @@ public class ZongCharging {
         entity.setTransactionId(transactionId);
         try {
             gamesBillingRecordsRepository.save(entity);
-            log.info("CHARGING | ZONGCHARGING CLASS | RECORDS INSERTED FOR MSISDN "+req.getMsisdn());
+            log.info("CHARGING | ZONGCHARGING CLASS | RECORDS INSERTED FOR MSISDN " + req.getMsisdn());
         } catch (InvalidJpaQueryMethodException e) {
-            log.info("CHARGING | ZONGCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS "+e.getCause());
+            log.info("CHARGING | ZONGCHARGING CLASS | EXCEPTION CAUGHT WHILE INSERTING RECORDS " + e.getCause());
         }
-        if(req.getIsRenewal()==1){
+        if (req.getIsRenewal() == 1) {
             log.info("BILLING SERVICE || ZONG CHARGING || UPDATING TODAYS CHARGED TABLE");
-            updateWeeklyChargedTable(res,req);
-            updateTodaysChargedTable(res,req);
+            updateWeeklyChargedTable(res, req);
+            updateTodaysChargedTable(res, req);
         }
     }
 
@@ -162,7 +158,7 @@ public class ZongCharging {
         WeeklyChargedMsisdnsEntity todaysChargedMsisdnsEntity = new WeeklyChargedMsisdnsEntity();
         if (chargedMsisdnsEntity == null) {
             todaysChargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
-            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+            if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
                 log.info("BILLING SERVICE || ZONG CHARGING || " + req.getMsisdn() + " | RENEWED SUCCESSFULLY");
                 todaysChargedMsisdnsEntity.setIsCharged(1);
             } else {
@@ -179,7 +175,7 @@ public class ZongCharging {
         } else {
             chargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
             chargedMsisdnsEntity.setNumberOfTries(chargedMsisdnsEntity.getNumberOfTries() + 1);
-            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+            if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
                 chargedMsisdnsEntity.setIsCharged(1);
             } else {
                 chargedMsisdnsEntity.setIsCharged(0);
@@ -188,12 +184,13 @@ public class ZongCharging {
         }
 
     }
+
     private void updateTodaysChargedTable(Response res, ChargeRequestProperties req) {
         TodaysChargedMsisdnsEntity chargedMsisdnsEntity = chargedMsisdnsRepository.findTopByMsisdn(req.getMsisdn());
         TodaysChargedMsisdnsEntity todaysChargedMsisdnsEntity = new TodaysChargedMsisdnsEntity();
         if (chargedMsisdnsEntity == null) {
             todaysChargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
-            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+            if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
                 log.info("BILLING SERVICE || ZONG CHARGING || " + req.getMsisdn() + " | RENEWED SUCCESSFULLY");
                 todaysChargedMsisdnsEntity.setIsCharged(1);
             } else {
@@ -210,7 +207,7 @@ public class ZongCharging {
         } else {
             chargedMsisdnsEntity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
             chargedMsisdnsEntity.setNumberOfTries(chargedMsisdnsEntity.getNumberOfTries() + 1);
-            if (res.getCode()==ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
+            if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
                 chargedMsisdnsEntity.setIsCharged(1);
             } else {
                 chargedMsisdnsEntity.setIsCharged(0);
@@ -220,12 +217,12 @@ public class ZongCharging {
 
     }
 
-    public void processFailed(){
+    public void processFailed() {
 
-        while (true){
-            if(!failedRequests.isEmpty()){
+        while (true) {
+            if (!failedRequests.isEmpty()) {
                 int size = failedRequests.size();
-                log.info("Failed List Size "+size);
+                log.info("Failed List Size " + size);
                 ChargeRequestProperties requestProperties = failedRequests.remove(--size);
                 try {
                     sendChargingRequest(requestProperties);

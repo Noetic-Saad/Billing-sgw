@@ -19,11 +19,12 @@ public class ZongMMLRequest {
 
     private static TCPClient client;
 
-    public ZongMMLRequest(TCPClient tcpClient){
-        this.client = tcpClient;
-    }
-
-    public ZongMMLRequest() {
+    public TCPClient serverConnection() {
+        String ServerIP = "172.20.51.81";
+        int ServerPort = 8799;
+        client = new TCPClient();
+        client.Connect(ServerIP, ServerPort);
+        return client;
     }
 
     synchronized String connect(String message, String flag) throws Exception {
@@ -52,34 +53,8 @@ public class ZongMMLRequest {
         return output;
     }
 
-    public String deductConnect(String message, String flag) throws Exception {
-        String output = "";
-        OutputStream stream = null;
-        String responseData = null;
-        try {
-            //  	log.debug("IN CONNECT...");
-            //String message = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER=Noetic,PSWD=Noetic@123;AEBA9EF6";
-            byte[] data = message.getBytes("US-ASCII");
-            stream = client.GetStream();
-            stream.write(data, 0, data.length);
-            output = "Sent: " + message;
-
-            data = new byte[10240];
-
-
-            InputStream stream_in = client.Read();
-            int bytes = stream_in.read(data, 0, data.length);
-            responseData = new String(data, "US-ASCII");
-            output = "Received:  " + responseData;
-
-        } catch (Exception e) {
-            throw new Exception();
-        }
-        System.out.println("The Value of  = " + output);
-        return output;
-    }
-
     public String logIn() throws Exception{
+        serverConnection();
         String userid = "Noetic";
         String password = "Noetic@123";
         String loginbody = "`SC`005A1.00JS123456PPSPPS  00000000DLGLGN    00000001TXBEG     LOGIN:USER="+userid+",PSWD="+password+";";
@@ -95,18 +70,6 @@ public class ZongMMLRequest {
         }
         log.info("CHARGING | ZONGMMLREQUEST CLASS | LOGIN RESPONSE | "+logincommand);
         return logincommand;
-    }
-
-    public void sendHearBeat() throws Exception {
-        String hearbeat=  "`SC`0004HBHBB7BDB7BD";
-        try {
-            System.out.println("Heart Beat Sent");
-            logIn();
-            String response = connect(hearbeat, "N");
-            System.out.println(response);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
     }
 
     public String chksum(String cmd) {
@@ -146,7 +109,7 @@ public class ZongMMLRequest {
 
         try {
             log.info("CHARGING | ZONGMMLREQUEST CLASS | SENT | "+headerAndBody+chksum);
-            deductBalCommand = deductConnect(headerAndBody+chksum, "N");
+            deductBalCommand = connect(headerAndBody+chksum, "N");
         } catch (SocketException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
