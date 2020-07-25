@@ -104,7 +104,7 @@ public class ZongCharging {
     private void saveChargingRecords(Response res, ChargeRequestProperties req) {
         GamesBillingRecordEntity entity = new GamesBillingRecordEntity();
         entity.setAmount(req.getChargingAmount());
-        entity.setCdate(new Timestamp(req.getOriginDateTime().getTime()));
+        entity.setCdate(Timestamp.valueOf(LocalDateTime.now()));
         if (res.getCode() == ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL) {
             entity.setIsCharged(1);
         } else {
