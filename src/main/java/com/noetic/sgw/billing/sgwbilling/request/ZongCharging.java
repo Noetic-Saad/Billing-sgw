@@ -60,27 +60,53 @@ public class ZongCharging {
         if (!testing) {
             if (!isAlreadyCharged) {
                 charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
-                zongMMLRequest.logIn();
+//                zongMMLRequest.logIn();
                 String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, SERVICE_ID_20);
-                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
-                String[] zongRes = response.split("RETN=");
-                String[] codeArr = new String[2];
-                if (zongRes.length < 2) {
-                    codeArr[0] = "2001";
-                } else {
-                    codeArr = zongRes[1].split(",");
-                }
-                code = codeArr[0];
+//                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
+//                String[] zongRes = response.split("RETN=");
+//                String[] codeArr = new String[2];
+//                if (zongRes.length < 2) {
+//                    codeArr[0] = "2001";
+//                } else {
+//                    codeArr = zongRes[1].split(",");
+//                }
+//                code = codeArr[0];
                 log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
+                int random = (int) (Math.random() * 4 + 1);
+                System.out.println(random);
 
-                if (code.equalsIgnoreCase("0000")) {
+                if (random==1) {
+
+                    code = "0000";
+                    if (code.equalsIgnoreCase("0000")) {
+                        res.setCorrelationId(request.getCorrelationId());
+                        res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                        res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
+                        log.info("IN ZONG CHARGING IF 0000 || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
+
+                    }
+                }else if(random==2) {
+                    code="1001";
+                    if (code.equalsIgnoreCase("1001")) {
+                        res.setCorrelationId(request.getCorrelationId());
+                        res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                        res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
+                        log.info("IN ZONG CHARGING IF 1001 || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
+                    }
+                }else if(random==3) {
+                    code="1002";
+                    if (code.equalsIgnoreCase("1002")) {
+                        res.setCorrelationId(request.getCorrelationId());
+                        res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
+                        res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND)));
+                        log.info("IN ZONG CHARGING IF 1002 || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
+                    }
+                }
+                else {
                     res.setCorrelationId(request.getCorrelationId());
-                    res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
-                } else {
-                    res.setCorrelationId(request.getCorrelationId());
-                    res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
+                    res.setCode(ResponseTypeConstants.OTHER_ERROR);
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.OTHER_ERROR)));
+                    log.info("IN ZONG CHARGING IF OTHER || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
                 }
             } else {
                 res.setCorrelationId(request.getCorrelationId());

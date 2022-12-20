@@ -67,7 +67,7 @@ public class JazzCharging {
     private int responseCode = -1;
     private String status="Fail";
     private String[] recArray = new String[2];
-    HttpResponse<String> response;
+    int  response = -1;
     @Autowired
     private GamesBillingRecordsRepository gamesBillingRecordsRepository;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -170,18 +170,18 @@ public class JazzCharging {
 
             if (!isAlreadyCharged) {
                 try {
-                    response = Unirest.post(env.getProperty("jazz.api"))
-                            .header("Authorization", env.getProperty("jazz.api.authorization"))
-                            .header("Content-Type", "text/xml")
-                            .header("User-Agent", "UGw Server/4.3/1.0")
-                            .header("Cache-Control", "no-cache")
-                            .header("Pragma", "no-cache")
-                            .header("Host", "10.13.32.156:10010")
-                            .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
-                            .header("Connection", "keep-alive")
-                            .body(inputXML).asString();
-                    recArray = xmlConversion(response.getBody());
-                    System.out.println(response.getStatus());
+//                    response = Unirest.post(env.getProperty("jazz.api"))
+//                            .header("Authorization", env.getProperty("jazz.api.authorization"))
+//                            .header("Content-Type", "text/xml")
+//                            .header("User-Agent", "UGw Server/4.3/1.0")
+//                            .header("Cache-Control", "no-cache")
+//                            .header("Pragma", "no-cache")
+//                            .header("Host", "10.13.32.156:10010")
+//                            .header("Accept", "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2")
+//                            .header("Connection", "keep-alive")
+//                            .body(inputXML).asString();
+//                    recArray = xmlConversion(response.getBody());
+//                    System.out.println(response.getStatus());
                 } catch (UnirestException e) {
                     logger.info("Response +" + response);
                     logger.error("Error while sending request " + e.getStackTrace());
@@ -191,20 +191,22 @@ public class JazzCharging {
                     responseCode = Integer.valueOf(recArray[1]);
                     logger.info("BILLING SERVICE || JAZZ CHARGING || JAZZ RESPONSE FOR || "+request.getMsisdn()+" || "+responseCode);
                 }
-                if (response == null) {
+                responseCode = (int) (Math.random() * 4 + 1);
+                System.out.println(responseCode);
+                if (response == 1) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(Integer.parseInt(ResponseTypeConstants.REMOTE_SERVER_CONNECTION_ERROR));
                     res.setMsg(startConfiguration.getResultStatusDescription(ResponseTypeConstants.REMOTE_SERVER_CONNECTION_ERROR));
                     logger.info(String.format("RESPONSE CODE FORBIDDEN-%s", subscriberNumber));
-                } else if (responseCode == 0) {
+                } else if (responseCode == 2) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
                     res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
-                } else if (responseCode == 102) {
+                } else if (responseCode == 3) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
                     res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND)));
-                } else if (responseCode == 124) {
+                } else if (responseCode == 4) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
                     res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));

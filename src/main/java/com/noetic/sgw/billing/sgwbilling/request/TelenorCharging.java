@@ -50,6 +50,7 @@ public class TelenorCharging {
     @Autowired
     private StartConfiguration startConfiguration;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final Logger log = LoggerFactory.getLogger(TelenorCharging.class);
 
     public TelenorCharging(Environment env) {
         this.env = env;
@@ -81,29 +82,65 @@ public class TelenorCharging {
         Double adjustmentAmount = Double.valueOf(decimalFormatter.format(req.getChargingAmount()))+Double.valueOf(decimalFormatter1.format(req.getTaxAmount()));
         String chargeAmount = decimalFormatter1.format(adjustmentAmount);
         if (!testing) {
-            HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
-                    .header("authorization", "Bearer " + accessToken)
-                    .header("content-type", "application/json")
-                    .header("cache-control", "no-cache")
-                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
-                    .asJson();
-            logger.info("Charging Api Response " + response.getBody().toPrettyString());
-            if (response.getStatus() == 200) {
-                res.setCorrelationId(req.getCorrelationId());
-                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
-                res.setMsg("Subscribed SuccessFully");
-            } else if (response.getStatus() == 403) {
-                res.setCorrelationId(req.getCorrelationId());
-                res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
-                res.setMsg("UnAuthorized Request");
-            } else if (response.getStatus() == 500) {
-                res.setCorrelationId(req.getCorrelationId());
-                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
-                res.setMsg("Insufficient Balance");
-            }else {
-                getNewAccessToken();
-                chargeRequest(req);
+            int random = (int) (Math.random() * 4 + 1);
+            String code = null;
+            System.out.println(random);
+            if (random==1) {
+
+                code = "0000";
+                if (code.equalsIgnoreCase("0000")) {
+                    res.setCorrelationId(req.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
+                    log.info("IN ZONG CHARGING IF 0000 || ZONG RESPONSE FOR || " + req.getMsisdn() + " || CODE || " + code);
+
+                }
+            }else if(random==2) {
+                code="1001";
+                if (code.equalsIgnoreCase("1001")) {
+                    res.setCorrelationId(req.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
+                    log.info("IN ZONG CHARGING IF 1001 || ZONG RESPONSE FOR || " + req.getMsisdn() + " || CODE || " + code);
+                }
+            }else if(random==3) {
+                code="1002";
+                if (code.equalsIgnoreCase("1002")) {
+                    res.setCorrelationId(req.getCorrelationId());
+                    res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
+                    res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND)));
+                    log.info("IN ZONG CHARGING IF 1002 || ZONG RESPONSE FOR || " + req.getMsisdn() + " || CODE || " + code);
+                }
             }
+            else {
+                res.setCorrelationId(req.getCorrelationId());
+                res.setCode(ResponseTypeConstants.OTHER_ERROR);
+                res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.OTHER_ERROR)));
+                log.info("IN ZONG CHARGING IF OTHER || ZONG RESPONSE FOR || " + req.getMsisdn() + " || CODE || " + code);
+            }
+//            HttpResponse<JsonNode> response = Unirest.post(env.getProperty("tp.api.url"))
+//                    .header("authorization", "Bearer " + accessToken)
+//                    .header("content-type", "application/json")
+//                    .header("cache-control", "no-cache")
+//                    .body("{\n\t\"msisdn\":\"" + subscriberNumber + "\",\n\t\"chargableAmount\":\"" + chargeAmount + "\",\n\t\"PartnerID\":\"" + partnerID + "\",\n\t\"ProductID\":\"" + productID + "\",\n\t\"TransactionID\":\"" + transactionID + "\",\n\t\"correlationID\":\"" + req.getCorrelationId() + "\"\n}")
+//                    .asJson();
+//            logger.info("Charging Api Response " + response.getBody().toPrettyString());
+//            if (response.getStatus() == 200) {
+//                res.setCorrelationId(req.getCorrelationId());
+//                res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
+//                res.setMsg("Subscribed SuccessFully");
+//            } else if (response.getStatus() == 403) {
+//                res.setCorrelationId(req.getCorrelationId());
+//                res.setCode(ResponseTypeConstants.UNAUTHORIZED_REQUEST);
+//                res.setMsg("UnAuthorized Request");
+//            } else if (response.getStatus() == 500) {
+//                res.setCorrelationId(req.getCorrelationId());
+//                res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
+//                res.setMsg("Insufficient Balance");
+//            }else {
+//                getNewAccessToken();
+//                chargeRequest(req);
+//            }
         } else {
             logger.info("BILLING SERVICE || TELENOR CHARGING || MOCK REQUEST FOR || "+req.getMsisdn());
             res.setCorrelationId(req.getCorrelationId());

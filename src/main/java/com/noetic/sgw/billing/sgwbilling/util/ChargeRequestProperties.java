@@ -1,8 +1,9 @@
 package com.noetic.sgw.billing.sgwbilling.util;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class ChargeRequestProperties {
+public class ChargeRequestProperties implements Serializable {
 
     private long msisdn;
     private Integer operatorId;
