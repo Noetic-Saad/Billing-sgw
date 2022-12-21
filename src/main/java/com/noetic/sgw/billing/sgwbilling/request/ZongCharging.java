@@ -83,7 +83,7 @@ public class ZongCharging {
                         res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
                         res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
                         log.info("IN ZONG CHARGING IF 0000 || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
-
+                        return res;
                     }
                 }else if(random==2) {
                     code="1001";
@@ -92,6 +92,7 @@ public class ZongCharging {
                         res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
                         res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
                         log.info("IN ZONG CHARGING IF 1001 || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
+                        return res;
                     }
                 }else if(random==3) {
                     code="1002";
@@ -100,6 +101,7 @@ public class ZongCharging {
                         res.setCode(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND);
                         res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUBSCRIBER_NOT_FOUND)));
                         log.info("IN ZONG CHARGING IF 1002 || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
+                        return res;
                     }
                 }
                 else {
@@ -107,17 +109,20 @@ public class ZongCharging {
                     res.setCode(ResponseTypeConstants.OTHER_ERROR);
                     res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.OTHER_ERROR)));
                     log.info("IN ZONG CHARGING IF OTHER || ZONG RESPONSE FOR || " + request.getMsisdn() + " || CODE || " + code);
+                    return res;
                 }
             } else {
                 res.setCorrelationId(request.getCorrelationId());
                 res.setCode(ResponseTypeConstants.ALREADY_CHARGED);
                 res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.ALREADY_CHARGED)));
+                return res;
             }
         } else {
             log.info("BILLING SERVICE || ZONG CHARGING || MOCK REQUEST FOR || " + request.getMsisdn());
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
             res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
+            return res;
         }
         if (request.isDcb()) {
             res.setCode(Integer.valueOf(code));
