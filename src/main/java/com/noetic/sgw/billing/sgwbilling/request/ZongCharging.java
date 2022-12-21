@@ -35,7 +35,7 @@ public class ZongCharging {
     @Autowired
     AppBootListner appBootListner;
 
-    private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
+//    private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private Response res = new Response();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
     private boolean testing = false;

@@ -25,7 +25,7 @@ public class ZongMoCharging {
     private String serviceId = "";
     private String[] zongRes;
 
-    private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
+//    private ZongMMLRequest zongMMLRequest = new ZongMMLRequest();
     private MoResponse res = new MoResponse();
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
     private boolean testing = false;
@@ -48,17 +48,12 @@ public class ZongMoCharging {
             serviceId = "Noet25";
         }
         if(!testing) {
-                zongMMLRequest.logIn();
-                charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
-                String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, serviceId);
+            int random = (int) (Math.random() * 4 + 1);
+            System.out.println(random);
+            if(random !=1 )
+            {
 
-                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
-                zongRes = response.split("RETN=");
-                String[] codeArr = zongRes[1].split(",");
-                String code = codeArr[0];
-                log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
-
-                if (code.equalsIgnoreCase("0000")) {
+                if (random != 3) {
                     res.setCorrelationId(request.getCorrelationId());
                     res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);
                     res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL)));
@@ -67,8 +62,20 @@ public class ZongMoCharging {
                     res.setCode(ResponseTypeConstants.INSUFFICIENT_BALANCE);
                     res.setMsg(startConfiguration.getResultStatusDescription(Integer.toString(ResponseTypeConstants.INSUFFICIENT_BALANCE)));
                 }
+            }
+//                zongMMLRequest.logIn();
+//                charginAmount = String.valueOf((int) request.getChargingAmount() * 100);
+//                String response = zongMMLRequest.deductBalance(String.valueOf(request.getMsisdn()), charginAmount, serviceId);
+
+//                log.info("CHARGING | ZONGCHARGING CLASS | ZONG RESPONSE | " + response);
+//                zongRes = response.split("RETN=");
+//                String[] codeArr = zongRes[1].split(",");
+//                String code = codeArr[0];
+//                log.info("CHARGING | ZONGCHARGING CLASS | ZONG MML RESPONSE CODE | " + code);
+
+
         }else {
-            Thread.sleep(100l);
+//            Thread.sleep(100l);
             log.info("BILLING SERVICE || ZONG CHARGING || MOCK REQUEST FOR || "+request.getMsisdn());
             res.setCorrelationId(request.getCorrelationId());
             res.setCode(ResponseTypeConstants.SUSBCRIBED_SUCCESSFULL);

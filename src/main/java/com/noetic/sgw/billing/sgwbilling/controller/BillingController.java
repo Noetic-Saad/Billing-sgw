@@ -20,7 +20,7 @@ class BillingController {
 
     @PostMapping
     public Response chargeRequest(@RequestBody ChargeRequestProperties req) throws Exception {
-        System.out.println(req.toString());
+        System.out.println(req);
         return chargingService.processRequest(req);
     }
 
